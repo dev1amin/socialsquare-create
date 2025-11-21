@@ -6,80 +6,73 @@ import FormButtons from './FormButtons';
 export default function InstagramHandleForm({ onContinue, onBack, formData }: FormStepProps) {
   const [instagramHandle, setInstagramHandle] = useState(formData?.instagramHandle || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const isValidInstagramHandle = () => {
+    const trimmed = instagramHandle.trim();
+    return trimmed.length >= 1 && trimmed.length <= 30 && /^[a-zA-Z0-9._]+$/.test(trimmed);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (instagramHandle.trim() && isValidInstagramHandle()) {
-      setIsLoading(true);
-      
-      try {
-        const response = await fetch('https://webhook.workez.online/webhook/trends/lander/getUserProfile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...formData,
-            instagramHandle: instagramHandle.trim()
-          })
-        });
+    setErrorMessage(null);
 
-        if (response.ok) {
-          const responseData = await response.json();
-          console.log('User profile metrics:', responseData);
-          
-          // Check if we got a successful response with valid data
-          if (responseData && responseData.success === true) {
-            // Continue with the response data
-            onContinue({ 
-              instagramHandle: instagramHandle.trim(),
-              userProfileMetrics: {
-                ...responseData,
-              }
-            });
-          } else {
-            // Profile not found or invalid response
-            console.error('Invalid profile data or profile not found:', responseData);
-            // Show error message or continue anyway
-            if (onContinue) {
-              onContinue({ 
-                instagramHandle: instagramHandle.trim(),
-                userProfileMetrics: responseData,
-                profileError: true
-              });
-            }
-          }
-        } else {
-          console.error('User profile request failed:', response.status, response.statusText);
-          // Continue anyway with just the handle
-          if (onContinue) {
-            onContinue({ instagramHandle: instagramHandle.trim() });
-          }
-        }
-      } catch (error) {
-        console.error('User profile request error:', error);
-        // Continue anyway with just the handle
-        if (onContinue) {
-          onContinue({ instagramHandle: instagramHandle.trim() });
-        }
-      } finally {
-        setIsLoading(false);
+    if (!isValidInstagramHandle()) {
+      setErrorMessage('Digite um @ de Instagram válido.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('https://webhook.workez.online/webhook/trends/lander/getUserProfile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          instagramHandle: instagramHandle.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('User profile request failed:', response.status, response.statusText);
+        setErrorMessage('Não conseguimos puxar esse @. Confira se digitou certo e tente de novo. :)');
+        return; // NÃO chama onContinue
       }
+
+      const responseData = await response.json();
+      console.log('User profile metrics:', responseData);
+
+      if (responseData && responseData.success === true) {
+        // Sucesso → pode continuar
+        onContinue?.({
+          instagramHandle: instagramHandle.trim(),
+          userProfileMetrics: {
+            ...responseData,
+          },
+        });
+      } else {
+        console.error('Invalid profile data or profile not found:', responseData);
+        // Perfil não encontrado / inválido → mantém na tela e mostra erro
+        setErrorMessage('Não encontramos esse perfil. Provavelmente o @ está errado. Tenta novamente.');
+        // se você QUISER continuar mesmo assim, aí sim chamaria onContinue aqui.
+      }
+    } catch (error) {
+      console.error('User profile request error:', error);
+      setErrorMessage('Erro ao buscar o perfil. Confere o @ e tenta novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleInstagramChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Remove @ symbol if user types it and allow letters, numbers, dots, underscores
     const cleanValue = value.replace(/^@/, '');
     if (/^[a-zA-Z0-9._]*$/.test(cleanValue) && cleanValue.length <= 30) {
       setInstagramHandle(cleanValue);
     }
-  };
-
-  const isValidInstagramHandle = () => {
-    const trimmed = instagramHandle.trim();
-    return trimmed.length >= 1 && trimmed.length <= 30 && /^[a-zA-Z0-9._]+$/.test(trimmed);
   };
 
   return (
@@ -115,25 +108,33 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
                 </div>
               </div>
             ) : (
-              <div className="relative">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <img 
-                    src="https://cdn.iconscout.com/icon/free/png-256/free-instagram-logo-icon-svg-download-png-1646407.png" 
-                    alt="Instagram" 
-                    className="w-5 h-5 mr-2"
+              <>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <img
+                      src="https://cdn.iconscout.com/icon/free/png-256/free-instagram-logo-icon-svg-download-png-1646407.png"
+                      alt="Instagram"
+                      className="w-5 h-5 mr-2"
+                    />
+                    <span className="text-sm text-gray-medium">@</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={instagramHandle}
+                    onChange={handleInstagramChange}
+                    className="w-full pl-16 pr-4 py-4 text-sm text-gray-dark bg-secondary border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-medium"
+                    maxLength={30}
+                    autoFocus
+                    placeholder="seu_usuario_instagram"
                   />
-                  <span className="text-sm text-gray-medium">@</span>
                 </div>
-                <input
-                  type="text"
-                  value={instagramHandle}
-                  onChange={handleInstagramChange}
-                  className="w-full pl-16 pr-4 py-4 text-sm text-gray-dark bg-secondary border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-medium"
-                  maxLength={30}
-                  autoFocus
-                  placeholder="seu_usuario_instagram"
-                />
-              </div>
+
+                {errorMessage && (
+                  <p className="mt-2 text-sm text-danger">
+                    {errorMessage}
+                  </p>
+                )}
+              </>
             )}
           </div>
 
