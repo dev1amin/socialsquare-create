@@ -88,7 +88,9 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
         };
       }
 
-      const customId = `custom-${nicheText.toLowerCase().trim().replace(/\s+/g, '-')}`;
+      const slug = nicheText.toLowerCase().trim().replace(/\s+/g, '-');
+      const customId = `custom-${slug}`;
+
       return {
         text: nicheText,
         type: nicheType,
@@ -148,7 +150,8 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
       }
     } else {
       // Custom 100% novo → cria ID, coloca NO TOPO de tudo e já selecionado
-      const customId = `custom-${trimmedNiche.toLowerCase().replace(/\s+/g, '-')}`;
+      const slug = trimmedNiche.toLowerCase().replace(/\s+/g, '-');
+      const customId = `custom-${slug}`;
 
       setAvailableNiches(prev => [
         { id: customId, name: trimmedNiche },
@@ -197,7 +200,8 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
           id: matched.id
         };
       } else {
-        const customId = `custom-${trimmedValue.toLowerCase().replace(/\s+/g, '-')}`;
+        const slug = trimmedValue.toLowerCase().replace(/\s+/g, '-');
+        const customId = `custom-${slug}`;
 
         setAvailableNiches(prev => {
           if (prev.some(p => p.name.toLowerCase() === trimmedValue.toLowerCase())) return prev;
@@ -255,28 +259,14 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (niches.length > 0 && onContinue) {
-      // IDs válidos do banco de dados
-      const availableIds = new Set(availableNiches.map(n => n.id));
-
-      // Nichos que estão no banco (têm id presente em availableNiches OU id não começa com 'custom-')
-
-      const validNiches = niches.filter(
-        niche =>
-          typeof niche.id === 'string' &&
-          (availableIds.has(niche.id) || !niche.id.startsWith('custom-'))
+      const predefinedNiches = niches.filter(
+        niche => niche.id && !niche.id.startsWith('custom-')
       );
-
-      // Nichos customizados: id começa com 'custom-' e não está no banco
-      const custom_niches = niches
-        .filter(
-          niche =>
-            typeof niche.id === 'string' &&
-            niche.id.startsWith('custom-') &&
-            !availableIds.has(niche.id)
-        )
+      const customNichesTexts = niches
+        .filter(niche => niche.id && niche.id.startsWith('custom-'))
         .map(niche => niche.text);
 
-      onContinue({ niches: validNiches });
+      onContinue({ niches: predefinedNiches, custom_niches: customNichesTexts });
     }
   };
 
