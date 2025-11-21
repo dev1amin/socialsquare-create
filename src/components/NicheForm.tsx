@@ -149,14 +149,9 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
         ]);
       }
     } else {
-      // Custom 100% novo → cria ID, coloca NO TOPO de tudo e já selecionado
+      // Custom 100% novo → entra em `niches` como custom-*
       const slug = trimmedNiche.toLowerCase().replace(/\s+/g, '-');
       const customId = `custom-${slug}`;
-
-      setAvailableNiches(prev => [
-        { id: customId, name: trimmedNiche },
-        ...prev,
-      ]);
 
       setNiches(prev => [
         { text: trimmedNiche, type: 'manualAdded', id: customId },
@@ -202,14 +197,6 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
       } else {
         const slug = trimmedValue.toLowerCase().replace(/\s+/g, '-');
         const customId = `custom-${slug}`;
-
-        setAvailableNiches(prev => {
-          if (prev.some(p => p.name.toLowerCase() === trimmedValue.toLowerCase())) return prev;
-          return [
-            { id: customId, name: trimmedValue },
-            ...prev,
-          ];
-        });
 
         updatedNiches[index] = {
           ...updatedNiches[index],
@@ -335,8 +322,54 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
 
           {/* Niche Selection Pills */}
           <div className="mb-8 bg-white rounded-xl p-4 max-h-[400px] overflow-y-auto border border-gray-200">
+            {/* Nichos selecionados (inclui custom) */}
+            <div className="mb-4">
+              <p className="text-xs font-medium text-gray-500 mb-2">
+                Nichos selecionados
+              </p>
+              {niches.length === 0 ? (
+                <p className="text-xs text-gray-400">
+                  Nenhum nicho selecionado ainda.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {niches.map((niche, index) => (
+                    <div key={niche.id || `${niche.text}-${index}`} className="flex items-center gap-1">
+                      {editingIndex === index ? (
+                        <input
+                          type="text"
+                          value={editingValue}
+                          onChange={handleEditChange}
+                          onKeyDown={(e) => handleEditKeyDown(e, index)}
+                          onBlur={() => handleSaveEdit(index)}
+                          autoFocus
+                          className="px-3 py-1 text-xs border border-gray-300 rounded-full focus:outline-none focus:border-primary"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleEditNiche(index)}
+                          className="rounded-full border-2 px-3 py-1 text-xs font-normal bg-[#6C63FF] border-[#6C63FF] text-white"
+                        >
+                          {niche.text}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNiche(index)}
+                        className="text-xs text-gray-500 hover:text-gray-800"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sugestões de nichos */}
             {isLoadingNiches ? (
-              <div className="w-full py-8 text-center">
+              <div className="w-full py-4 text-center">
                 <div className="inline-flex items-center space-x-3">
                   <div className="animate-spin rounded-xl h-6 w-6 border-b-2 border-primary"></div>
                   <span className="text-sm text-gray-medium">
