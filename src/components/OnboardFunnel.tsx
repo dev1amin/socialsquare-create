@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { FormData } from '../types/form';
 import { onboardConfig, findOnboardStepById, getOnboardFirstStep } from '../config/onboardConfig';
 import Phase1LoadingPage from './Phase1LoadingPage';
-import { verifyActivationToken, resendActivationEmail, checkAuthenticationStatus, storeAuthData, verifyJWT } from '../services/authService';
+import { verifyActivationToken, resendActivationEmail, checkAuthenticationStatus, storeAuthData, verifyJWT, getStoredAuthTokens } from '../services/authService';
 import { parseJWT, extractUserDataFromJWT, getJWTExpirationTime, extractEmailFromToken } from '../utils/tokenHelpers';
 
 const ONBOARD_DATA_STORAGE_KEY = 'prevent-quiz-onboard-data';
@@ -188,7 +188,13 @@ export default function OnboardFunnel() {
   };
 
   const handlePhase1LoadingComplete = () => {
-    window.location.href = 'https://socialsquaree.vercel.app/';
+    const { accessToken } = getStoredAuthTokens();
+    if (accessToken) {
+      window.location.href = `https://socialsquaree.vercel.app/login?jwt=${accessToken}`;
+    } else {
+      // Fallback if no token
+      window.location.href = 'https://socialsquaree.vercel.app/';
+    }
   };
 
   const handleBack = () => {
