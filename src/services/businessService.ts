@@ -5,6 +5,7 @@ export interface Influencer {
   lang: string;
   country: string;
   niche_ids?: string[];
+  niche_names?: string[];
 }
 
 export interface CreateBusinessPayload {
@@ -153,8 +154,18 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
       country: typeof profile === 'object' && profile.country ? profile.country : defaultLocale.country
     };
     
+    // Add UUID-based niches to niche_ids
     if (typeof profile === 'object' && profile.niche_ids && profile.niche_ids.length > 0) {
-      influencer.niche_ids = profile.niche_ids;
+      // Filter only UUIDs (not custom- prefixed ones for backward compatibility)
+      const uuidNiches = profile.niche_ids.filter((id: string) => !id.startsWith('custom-'));
+      if (uuidNiches.length > 0) {
+        influencer.niche_ids = uuidNiches;
+      }
+    }
+    
+    // Add custom niches to niche_names
+    if (typeof profile === 'object' && profile.niche_names && profile.niche_names.length > 0) {
+      influencer.niche_names = profile.niche_names;
     }
     
     return influencer;

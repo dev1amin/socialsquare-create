@@ -11,6 +11,7 @@ export interface Profile {
   lang?: string;
   country?: string;
   niche_ids?: string[];
+  niche_names?: string[];
 }
 
 export interface FormData {
