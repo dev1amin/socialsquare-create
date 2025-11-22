@@ -30,7 +30,8 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   const [currentProfile, setCurrentProfile] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
-  // React to formData changes (e.g., when coming from webhook analysis)
+
+  // React to formData changes
   useEffect(() => {
     const newProfiles = getInitialProfiles();
     if (newProfiles.length > 0) {
@@ -50,17 +51,14 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     const isAlreadyAdded = profiles.some(p => p.text === suggestion.text);
 
     if (isAlreadyAdded) {
-      // Remove from selected profiles
       setProfiles(profiles.filter(p => p.text !== suggestion.text));
     } else {
-      // Add to selected profiles
       setProfiles([...profiles, suggestion]);
     }
   };
 
   const handleRemoveProfile = (index: number) => {
     setProfiles(profiles.filter((_, i) => i !== index));
-    // Cancel editing if we're removing the profile being edited
     if (editingIndex === index) {
       setEditingIndex(null);
       setEditingValue('');
@@ -68,7 +66,6 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   };
 
   const handleEditProfile = (index: number) => {
-    // Don't allow editing of AI-recommended profiles
     if (profiles[index].type === 'aiRecommend') {
       return;
     }
@@ -104,12 +101,12 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Remove @ symbol if user types it and allow letters, numbers, dots, underscores
     const cleanValue = value.replace(/^@/, '');
     if (/^[a-zA-Z0-9._]*$/.test(cleanValue) && cleanValue.length <= 30) {
       setEditingValue(cleanValue);
     }
   };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -119,7 +116,6 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Remove @ symbol if user types it and allow letters, numbers, dots, underscores
     const cleanValue = value.replace(/^@/, '');
     if (/^[a-zA-Z0-9._]*$/.test(cleanValue) && cleanValue.length <= 30) {
       setCurrentProfile(cleanValue);
@@ -137,15 +133,13 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
 
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
-      {/* Header with Logo */}
       <div className="pt-12 pb-16 px-6">
         <Logo />
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col px-6 max-w-sm mx-auto w-full">
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          {/* Question */}
+
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-gray-dark text-left">
               Escolha no mínimo 3 influencers que você quer acompanhar
@@ -155,9 +149,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
             </p>
           </div>
 
-          {/* Input Field and AI Suggestions Container */}
           <div className="mb-4">
-            {/* Input Field */}
             <div className="flex space-x-2 mb-4">
               <div className="flex-1 relative">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -168,7 +160,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                   value={currentProfile}
                   onChange={handleProfileChange}
                   onKeyPress={handleKeyPress}
-                  className="w-full pl-10 pr-4 py-3 text-sm text-gray-dark bg-white border border-[#E5E5E5] rounded-xl transition-all duration-200  focus:outline-none focus:border-primary hover:border-primary placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-3 text-sm text-gray-dark bg-white border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary"
                   placeholder="perfil_para_monitorar"
                   maxLength={30}
                 />
@@ -187,9 +179,75 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
               </button>
             </div>
 
-            {/* AI Suggestions */}
+            {/* LISTA DE PERFIS ADICIONADOS */}
+            {profiles.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {profiles.map((profile, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between px-3 py-2 bg-white border border-gray-200 rounded-lg"
+                  >
+                    {editingIndex === index ? (
+                      <input
+                        type="text"
+                        value={editingValue}
+                        onChange={handleEditChange}
+                        onKeyDown={(e) => handleEditKeyPress(e, index)}
+                        className="flex-1 mr-2 text-sm border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:border-primary"
+                      />
+                    ) : (
+                      <div className="flex-1 text-sm text-gray-dark truncate">
+                        @{profile.text}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 ml-2">
+                      {editingIndex === index ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveEdit(index)}
+                            className="text-xs px-2 py-1 rounded-lg bg-primary text-white"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="text-xs px-2 py-1 rounded-lg bg-gray-200 text-gray-700"
+                          >
+                            Cancelar
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {profile.type !== 'aiRecommend' && (
+                            <button
+                              type="button"
+                              onClick={() => handleEditProfile(index)}
+                              className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-700"
+                            >
+                              Editar
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProfile(index)}
+                            className="text-xs px-2 py-1 rounded-lg bg-red-100 text-red-600"
+                          >
+                            Remover
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* AI SUGGESTIONS */}
             {aiSuggestions.length > 0 && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 mt-4">
                 {aiSuggestions.map((suggestion, index) => {
                   const isAlreadyAdded = profiles.some(p => p.text === suggestion.text);
 
@@ -229,7 +287,6 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
 
           <div className="flex-1 min-h-0"></div>
 
-          {/* Bottom Section with Continue Button */}
           <div className="pt-4 pb-8">
             <div className="space-y-3">
               <button
