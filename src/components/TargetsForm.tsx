@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
-import { FormStepProps } from '../types/form';
+import { FormStepProps, Profile, Niche } from '../types/form';
 import FormButtons from './FormButtons';
-
-// Profile type definition
-interface Profile {
-  text: string;
-  niche?: string;
-  type: 'aiRecommend' | 'manualAdded';
-}
 
 export default function TargetsForm({ onContinue, onBack, formData }: FormStepProps) {
   // Get only manually added profiles for initial state
@@ -16,9 +9,14 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     if (formData?.profilesToMonitor && formData.profilesToMonitor.length > 0) {
       return formData.profilesToMonitor.map(profile => {
         if (typeof profile === 'string') {
-          return { text: profile, type: 'manualAdded' as const };
+          return { text: profile, type: 'manualAdded' as const, lang: 'pt', country: 'BR', niche_ids: [] };
         }
-        return profile;
+        return { 
+          ...profile, 
+          lang: profile.lang || 'pt', 
+          country: profile.country || 'BR',
+          niche_ids: profile.niche_ids || []
+        };
       });
     }
     return [];
@@ -30,6 +28,9 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   const [currentProfile, setCurrentProfile] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
+  const [availableNiches, setAvailableNiches] = useState<Niche[]>([]);
+  const [loadingNiches, setLoadingNiches] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   // React to formData changes
   useEffect(() => {
@@ -39,10 +40,42 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     }
   }, [formData?.profilesToMonitor]);
 
+  // Fetch available niches on component mount
+  useEffect(() => {
+    const fetchNiches = async () => {
+      setLoadingNiches(true);
+      try {
+        const response = await fetch('https://webhook.workez.online/webhook/getNiches');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.niches && Array.isArray(data.niches)) {
+            const nichesWithIds = data.niches.map((niche: any) => ({
+              id: niche.id,
+              text: niche.name || niche.text,
+              type: 'aiRecommend' as const
+            }));
+            setAvailableNiches(nichesWithIds);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching niches:', error);
+      } finally {
+        setLoadingNiches(false);
+      }
+    };
+    fetchNiches();
+  }, []);
+
   const handleAddProfile = () => {
     const trimmedProfile = currentProfile.trim();
     if (trimmedProfile && !profiles.some(p => p.text === trimmedProfile)) {
-      setProfiles([...profiles, { text: trimmedProfile, type: 'manualAdded' }]);
+      setProfiles([...profiles, { 
+        text: trimmedProfile, 
+        type: 'manualAdded',
+        lang: 'pt',
+        country: 'BR',
+        niche_ids: []
+      }]);
       setCurrentProfile('');
     }
   };
@@ -53,7 +86,12 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     if (isAlreadyAdded) {
       setProfiles(profiles.filter(p => p.text !== suggestion.text));
     } else {
-      setProfiles([...profiles, suggestion]);
+      setProfiles([...profiles, {
+        ...suggestion,
+        lang: suggestion.lang || 'pt',
+        country: suggestion.country || 'BR',
+        niche_ids: suggestion.niche_ids || []
+      }]);
     }
   };
 
@@ -122,6 +160,36 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     }
   };
 
+  const handleLanguageChange = (index: number, lang: string) => {
+    const updatedProfiles = [...profiles];
+    updatedProfiles[index] = { ...updatedProfiles[index], lang };
+    setProfiles(updatedProfiles);
+  };
+
+  const handleCountryChange = (index: number, country: string) => {
+    const updatedProfiles = [...profiles];
+    updatedProfiles[index] = { ...updatedProfiles[index], country };
+    setProfiles(updatedProfiles);
+  };
+
+  const handleNicheToggle = (profileIndex: number, nicheId: string) => {
+    const updatedProfiles = [...profiles];
+    const profile = updatedProfiles[profileIndex];
+    const currentNiches = profile.niche_ids || [];
+    
+    if (currentNiches.includes(nicheId)) {
+      profile.niche_ids = currentNiches.filter(id => id !== nicheId);
+    } else {
+      profile.niche_ids = [...currentNiches, nicheId];
+    }
+    
+    setProfiles(updatedProfiles);
+  };
+
+  const toggleExpanded = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onContinue) {
@@ -181,65 +249,149 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
 
             {/* LISTA DE PERFIS ADICIONADOS */}
             {profiles.length > 0 && (
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-3">
                 {profiles.map((profile, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between px-3 py-2 bg-white border border-gray-200 rounded-lg"
+                    className="bg-white border border-gray-200 rounded-lg overflow-hidden"
                   >
-                    {editingIndex === index ? (
-                      <input
-                        type="text"
-                        value={editingValue}
-                        onChange={handleEditChange}
-                        onKeyDown={(e) => handleEditKeyPress(e, index)}
-                        className="flex-1 mr-2 text-sm border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:border-primary"
-                      />
-                    ) : (
-                      <div className="flex-1 text-sm text-gray-dark truncate">
-                        @{profile.text}
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 ml-2">
+                    <div className="flex items-center justify-between px-3 py-2">
                       {editingIndex === index ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleSaveEdit(index)}
-                            className="text-xs px-2 py-1 rounded-lg bg-primary text-white"
-                          >
-                            Salvar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleCancelEdit}
-                            className="text-xs px-2 py-1 rounded-lg bg-gray-200 text-gray-700"
-                          >
-                            Cancelar
-                          </button>
-                        </>
+                        <input
+                          type="text"
+                          value={editingValue}
+                          onChange={handleEditChange}
+                          onKeyDown={(e) => handleEditKeyPress(e, index)}
+                          className="flex-1 mr-2 text-sm border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:border-primary"
+                        />
                       ) : (
-                        <>
-                          {profile.type !== 'aiRecommend' && (
+                        <div className="flex-1 text-sm text-gray-dark truncate">
+                          @{profile.text}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 ml-2">
+                        {editingIndex === index ? (
+                          <>
                             <button
                               type="button"
-                              onClick={() => handleEditProfile(index)}
-                              className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-700"
+                              onClick={() => handleSaveEdit(index)}
+                              className="text-xs px-2 py-1 rounded-lg bg-primary text-white"
                             >
-                              Editar
+                              Salvar
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveProfile(index)}
-                            className="text-xs px-2 py-1 rounded-lg bg-red-100 text-red-600"
-                          >
-                            Remover
-                          </button>
-                        </>
-                      )}
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              className="text-xs px-2 py-1 rounded-lg bg-gray-200 text-gray-700"
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => toggleExpanded(index)}
+                              className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-600"
+                            >
+                              {expandedIndex === index ? '▲' : '▼'}
+                            </button>
+                            {profile.type !== 'aiRecommend' && (
+                              <button
+                                type="button"
+                                onClick={() => handleEditProfile(index)}
+                                className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-700"
+                              >
+                                Editar
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProfile(index)}
+                              className="text-xs px-2 py-1 rounded-lg bg-red-100 text-red-600"
+                            >
+                              Remover
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Expandable section for lang, country, and niches */}
+                    {expandedIndex === index && (
+                      <div className="px-3 py-3 border-t border-gray-200 bg-gray-50 space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Idioma</label>
+                            <select
+                              value={profile.lang || 'pt'}
+                              onChange={(e) => handleLanguageChange(index, e.target.value)}
+                              className="w-full text-xs px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                            >
+                              <option value="pt">Português</option>
+                              <option value="en">English</option>
+                              <option value="es">Español</option>
+                              <option value="fr">Français</option>
+                              <option value="de">Deutsch</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">País</label>
+                            <select
+                              value={profile.country || 'BR'}
+                              onChange={(e) => handleCountryChange(index, e.target.value)}
+                              className="w-full text-xs px-2 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                            >
+                              <option value="BR">Brasil</option>
+                              <option value="US">United States</option>
+                              <option value="GB">United Kingdom</option>
+                              <option value="ES">España</option>
+                              <option value="FR">France</option>
+                              <option value="DE">Deutschland</option>
+                              <option value="PT">Portugal</option>
+                              <option value="MX">México</option>
+                              <option value="AR">Argentina</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Nichos (opcional)
+                          </label>
+                          {loadingNiches ? (
+                            <div className="text-xs text-gray-500">Carregando nichos...</div>
+                          ) : (
+                            <div className="max-h-32 overflow-y-auto space-y-1 border border-gray-300 rounded-lg p-2 bg-white">
+                              {availableNiches.length > 0 ? (
+                                availableNiches.map((niche) => (
+                                  <label
+                                    key={niche.id}
+                                    className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-1 py-0.5 rounded"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={(profile.niche_ids || []).includes(niche.id!)}
+                                      onChange={() => handleNicheToggle(index, niche.id!)}
+                                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    <span className="text-xs text-gray-700">{niche.text}</span>
+                                  </label>
+                                ))
+                              ) : (
+                                <div className="text-xs text-gray-500">Nenhum nicho disponível</div>
+                              )}
+                            </div>
+                          )}
+                          {(profile.niche_ids || []).length > 0 && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {profile.niche_ids!.length} nicho(s) selecionado(s)
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

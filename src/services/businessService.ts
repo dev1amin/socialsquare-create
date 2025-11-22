@@ -4,6 +4,7 @@ export interface Influencer {
   handle: string;
   lang: string;
   country: string;
+  niche_ids?: string[];
 }
 
 export interface CreateBusinessPayload {
@@ -146,11 +147,17 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
 
   const influencers: Influencer[] = profilesToMonitor.slice(0, 10).map((profile: any) => {
     const handle = typeof profile === 'string' ? profile : profile.text;
-    return {
+    const influencer: Influencer = {
       handle: normalizeHandle(handle),
-      lang: defaultLocale.lang,
-      country: defaultLocale.country
+      lang: typeof profile === 'object' && profile.lang ? profile.lang : defaultLocale.lang,
+      country: typeof profile === 'object' && profile.country ? profile.country : defaultLocale.country
     };
+    
+    if (typeof profile === 'object' && profile.niche_ids && profile.niche_ids.length > 0) {
+      influencer.niche_ids = profile.niche_ids;
+    }
+    
+    return influencer;
   });
 
   const niches = formData.niches || [];
