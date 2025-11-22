@@ -73,7 +73,7 @@ export default function AccountNameForm({ onContinue, onBack, formData }: FormSt
               className="w-full px-4 py-4 text-sm text-gray-dark bg-secondary border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-medium"
               maxLength={50}
               autoFocus
-              placeholder="Digite o nome da sua conta..."
+              placeholder="Digite o nome da sua conta"
             />
           </div>
 
