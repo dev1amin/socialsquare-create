@@ -199,7 +199,7 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
     website: formData.websiteLink?.trim() || null,
     social_type: socialNetworkType === 'Marca Pessoal' ? 'Marca pessoal' : 'Empresa',
     instagram: normalizeHandle(instagramHandle),
-    linkedin: formData.linkedinHandle ? normalizeHandle(formData.linkedinHandle) : null,
+    linkedin: null,
     objective: mainObjective,
     influencers: influencers,
     niches: predefinedNiches.length > 0 ? predefinedNiches : null,
