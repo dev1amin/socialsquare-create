@@ -190,10 +190,10 @@ export default function OnboardFunnel() {
   const handlePhase1LoadingComplete = () => {
     const { accessToken } = getStoredAuthTokens();
     if (accessToken) {
-      window.location.href = `https://socialsquaree.vercel.app/login?jwt=${accessToken}`;
+      window.location.href = `https://socialsquare.com.br/login?jwt=${accessToken}`;
     } else {
       // Fallback if no token
-      window.location.href = 'https://socialsquaree.vercel.app/';
+      window.location.href = 'https://socialsquare.com.br/';
     }
   };
 
