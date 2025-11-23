@@ -7,7 +7,7 @@ export interface Niche {
 export interface Profile {
   text: string;
   niche?: string;
-  type: 'aiRecommend' | 'manualAdded';
+  type: 'aiRecommend' | 'manualAdded' | 'suggestionAdded';
   lang?: string;
   country?: string;
   niche_ids?: string[];

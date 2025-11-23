@@ -33,6 +33,9 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [customNicheInputs, setCustomNicheInputs] = useState<{[key: number]: string}>({});
   const [showCustomNicheInput, setShowCustomNicheInput] = useState<{[key: number]: boolean}>({});
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [fetchedSuggestions, setFetchedSuggestions] = useState<Profile[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   // refs para os containers de nichos de cada perfil
   const nicheListRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
@@ -115,6 +118,63 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
         niche_names: suggestion.niche_names || []
       }]);
     }
+  };
+
+  const handleAddManualSuggestion = (suggestion: Profile) => {
+    const isAlreadyAdded = profiles.some(p => p.text === suggestion.text);
+
+    if (!isAlreadyAdded) {
+      setProfiles([...profiles, {
+        text: suggestion.text,
+        type: 'suggestionAdded',
+        lang: suggestion.lang || 'pt',
+        country: suggestion.country || 'BR',
+        niche_ids: [],
+        niche_names: []
+      }]);
+    }
+  };
+
+  const fetchSuggestions = async () => {
+    setLoadingSuggestions(true);
+    try {
+      const response = await fetch('https://webhook.workez.online/webhook/trendspy/lander/findTargetes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Suggestions response:', data);
+        
+        if (Array.isArray(data) && data.length > 0) {
+          const suggestions = data.map((item: any) => ({
+            text: item.username || item.text,
+            niche: item.niche || item.niche_name,
+            type: 'aiRecommend' as const,
+            lang: 'pt',
+            country: 'BR',
+            niche_ids: [],
+            niche_names: []
+          }));
+          setFetchedSuggestions(suggestions);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleToggleSuggestions = () => {
+    if (!showSuggestions && fetchedSuggestions.length === 0) {
+      fetchSuggestions();
+    }
+    setShowSuggestions(!showSuggestions);
   };
 
   const handleRemoveProfile = (index: number) => {
@@ -379,14 +439,16 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                             </>
                           ) : (
                             <>
-                              <button
-                                type="button"
-                                onClick={() => toggleExpanded(index)}
-                                className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-600"
-                              >
-                                {expandedIndex === index ? '▲' : '▼'}
-                              </button>
-                              {profile.type !== 'aiRecommend' && (
+                              {profile.type !== 'suggestionAdded' && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleExpanded(index)}
+                                  className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-600"
+                                >
+                                  {expandedIndex === index ? '▲' : '▼'}
+                                </button>
+                              )}
+                              {profile.type !== 'aiRecommend' && profile.type !== 'suggestionAdded' && (
                                 <button
                                   type="button"
                                   onClick={() => handleEditProfile(index)}
@@ -408,7 +470,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                       </div>
 
                       {/* Expandable section for lang, country, and niches */}
-                      {expandedIndex === index && (
+                      {expandedIndex === index && profile.type !== 'suggestionAdded' && (
                         <div className="px-3 py-3 border-t border-gray-200 bg-gray-50 space-y-3">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
@@ -607,6 +669,60 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
 
           <div className="pt-4 pb-8">
             <div className="space-y-3">
+              {/* Botão de Sugestões de Perfil */}
+              {aiSuggestions.length === 0 && formData?.niches && formData.niches.length > 0 && (
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={handleToggleSuggestions}
+                    className="text-sm text-primary hover:text-accent underline font-medium"
+                    disabled={loadingSuggestions}
+                  >
+                    {loadingSuggestions ? 'Carregando sugestões...' : showSuggestions ? 'Ocultar sugestões de perfil' : 'Sugestões de perfil'}
+                  </button>
+
+                  {/* Exibir sugestões quando showSuggestions for true */}
+                  {showSuggestions && fetchedSuggestions.length > 0 && (
+                    <div className="flex flex-col gap-2 mt-3">
+                      {fetchedSuggestions.map((suggestion, index) => {
+                        const isAlreadyAdded = profiles.some(p => p.text === suggestion.text);
+
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleAddManualSuggestion(suggestion)}
+                            disabled={isAlreadyAdded}
+                            className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all duration-200 shadow-sm ${
+                              isAlreadyAdded
+                                ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
+                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2 flex-1">
+                              <span className="font-semibold text-base">@</span>
+                              <div className="flex-1">
+                                <div className="font-semibold text-base">{suggestion.text}</div>
+                                {suggestion.niche && (
+                                  <div className="text-xs opacity-75 truncate mt-0.5">{suggestion.niche}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 ml-2">
+                              {isAlreadyAdded ? (
+                                <div className="text-gray-400 text-lg font-bold">✓</div>
+                              ) : (
+                                <div className="text-gray-500 text-xl font-bold">+</div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={!isValidToSubmit}
