@@ -4,6 +4,16 @@ export interface Niche {
   id?: string;
 }
 
+export interface Profile {
+  text: string;
+  niche?: string;
+  type: 'aiRecommend' | 'manualAdded';
+  lang?: string;
+  country?: string;
+  niche_ids?: string[];
+  niche_names?: string[];
+}
+
 export interface FormData {
   age?: string;
   password?: string;
@@ -40,16 +50,8 @@ export interface FormData {
   eatingHabits?: string;
   mainObjective?: string;
   familyHistory?: string[];
-  profilesToMonitor?: Array<{
-    text: string;
-    niche?: string;
-    type: 'aiRecommend' | 'manualAdded';
-  }> | string[];
-  aiSuggestedProfiles?: Array<{
-    text: string;
-    niche?: string;
-    type: 'aiRecommend' | 'manualAdded';
-  }>;
+  profilesToMonitor?: Profile[] | string[];
+  aiSuggestedProfiles?: Profile[];
   lonelinessFactors?: string[];
   brandMissions?: string[];
   coreValues?: string[];
