@@ -2,9 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import Logo from './Logo';
 import { FormStepProps, Profile, Niche } from '../types/form';
 
+interface ProfileWithImage extends Profile {
+  profilePicture?: string;
+  verified?: boolean;
+}
+
 export default function TargetsForm({ onContinue, onBack, formData }: FormStepProps) {
   // Get only manually added profiles for initial state
-  const getInitialProfiles = (): Profile[] => {
+  const getInitialProfiles = (): ProfileWithImage[] => {
     if (formData?.profilesToMonitor && formData.profilesToMonitor.length > 0) {
       return formData.profilesToMonitor.map(profile => {
         if (typeof profile === 'string') {
@@ -23,7 +28,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   };
   
   // Separate AI suggestions and manually added profiles
-  const [profiles, setProfiles] = useState<Profile[]>(getInitialProfiles());
+  const [profiles, setProfiles] = useState<ProfileWithImage[]>(getInitialProfiles());
   const [aiSuggestions] = useState<Profile[]>(formData?.aiSuggestedProfiles || []);
   const [currentProfile, setCurrentProfile] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -36,6 +41,8 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [fetchedSuggestions, setFetchedSuggestions] = useState<Profile[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   // refs para os containers de nichos de cada perfil
   const nicheListRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
@@ -89,18 +96,48 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     fetchNiches();
   }, []);
 
-  const handleAddProfile = () => {
+  const handleAddProfile = async () => {
     const trimmedProfile = currentProfile.trim();
-    if (trimmedProfile && !profiles.some(p => p.text === trimmedProfile)) {
-      setProfiles([...profiles, { 
-        text: trimmedProfile, 
-        type: 'manualAdded',
-        lang: 'pt',
-        country: 'BR',
-        niche_ids: [],
-        niche_names: []
-      }]);
-      setCurrentProfile('');
+    if (!trimmedProfile || profiles.some(p => p.text === trimmedProfile)) {
+      return;
+    }
+
+    setLoadingProfile(true);
+    setProfileError(null);
+
+    try {
+      const response = await fetch('https://api.workez.online/webhook/getUserProfileInfluencers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: trimmedProfile })
+      });
+
+      const data = await response.json();
+      console.log('getUserProfileInfluencers response:', data);
+
+      if (response.ok && data && data.success) {
+        setProfiles([...profiles, { 
+          text: data.username || trimmedProfile, 
+          type: 'manualAdded',
+          lang: 'pt',
+          country: 'BR',
+          niche_ids: [],
+          niche_names: [],
+          profilePicture: data.profilePicture,
+          verified: true
+        }]);
+        setCurrentProfile('');
+        setProfileError(null);
+      } else {
+        setProfileError('Perfil não encontrado. Por favor, confira se o @ está correto.');
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setProfileError('Erro ao buscar perfil. Por favor, tente novamente.');
+    } finally {
+      setLoadingProfile(false);
     }
   };
 
@@ -138,7 +175,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   const fetchSuggestions = async () => {
     setLoadingSuggestions(true);
     try {
-      const response = await fetch('https://webhook.workez.online/webhook/trendspy/lander/findTargetes', {
+      const response = await fetch('https://api.workez.online/webhook/findTargetes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -332,6 +369,12 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     }
   };
 
+  const handleSkip = () => {
+    if (onContinue) {
+      onContinue({ profilesToMonitor: null });
+    }
+  };
+
   const isValidToSubmit = profiles.length >= 3;
 
   return (
@@ -363,7 +406,8 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                   value={currentProfile}
                   onChange={handleProfileChange}
                   onKeyPress={handleKeyPress}
-                  className="w-full pl-10 pr-4 py-3 text-sm text-gray-dark bg-white border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary"
+                  disabled={loadingProfile}
+                  className="w-full pl-10 pr-4 py-3 text-sm text-gray-dark bg-white border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="perfil_para_monitorar"
                   maxLength={30}
                 />
@@ -371,16 +415,22 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
               <button
                 type="button"
                 onClick={handleAddProfile}
-                disabled={!currentProfile.trim() || profiles.some(p => p.text === currentProfile.trim())}
+                disabled={!currentProfile.trim() || profiles.some(p => p.text === currentProfile.trim()) || loadingProfile}
                 className={`px-5 py-3 rounded-xl font-medium transition-all duration-200 ${
-                  currentProfile.trim() && !profiles.some(p => p.text === currentProfile.trim())
+                  currentProfile.trim() && !profiles.some(p => p.text === currentProfile.trim()) && !loadingProfile
                     ? 'bg-primary text-secondary hover:bg-accent/90'
                     : 'bg-gray-300 text-gray-medium cursor-not-allowed'
                 }`}
               >
-                +
+                {loadingProfile ? '...' : '+'}
               </button>
             </div>
+
+            {profileError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{profileError}</p>
+              </div>
+            )}
 
             {/* LISTA DE PERFIS ADICIONADOS */}
             {profiles.length > 0 && (
@@ -414,8 +464,17 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                             className="flex-1 mr-2 text-sm border border-gray-300 rounded-lg px-2 py-1 focus:outline-none focus:border-primary"
                           />
                         ) : (
-                          <div className="flex-1 text-sm text-gray-dark truncate">
-                            @{profile.text}
+                          <div className="flex-1 flex items-center gap-2">
+                            {profile.profilePicture && (
+                              <img 
+                                src={profile.profilePicture} 
+                                alt={profile.text}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            )}
+                            <div className="text-sm text-gray-dark truncate">
+                              @{profile.text}
+                            </div>
                           </div>
                         )}
 
@@ -734,6 +793,15 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
               >
                 Continuar
               </button>
+              
+              <button
+                type="button"
+                onClick={handleSkip}
+                className="w-full py-3 px-4 rounded-xl font-medium text-primary bg-white border border-primary hover:bg-primary/5 text-sm transition-all duration-200"
+              >
+                Fazer depois
+              </button>
+
               {onBack && (
                 <button
                   type="button"

@@ -15,7 +15,7 @@ export interface CreateBusinessPayload {
   instagram: string;
   linkedin?: string | null;
   objective: string;
-  influencers: Influencer[];
+  influencers: Influencer[] | null;
   niches?: string[] | null;
   custom_niches?: string[] | null;
 }
@@ -139,14 +139,12 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
     return null;
   }
 
-  if (profilesToMonitor.length < 3) {
-    console.error('[Business Payload] Need at least 3 profiles to monitor. Current:', profilesToMonitor.length);
-    return null;
-  }
-
   const defaultLocale = detectLanguageAndCountry();
 
-  const influencers: Influencer[] = profilesToMonitor.slice(0, 10).map((profile: any) => {
+  let influencers: Influencer[] | null = null;
+
+  if (profilesToMonitor && profilesToMonitor.length > 0) {
+    influencers = profilesToMonitor.slice(0, 10).map((profile: any) => {
     const handle = typeof profile === 'string' ? profile : profile.text;
     const influencer: Influencer = {
       handle: normalizeHandle(handle),
@@ -169,7 +167,8 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
     }
     
     return influencer;
-  });
+    });
+  }
 
   const niches = formData.niches || [];
   console.log('[Business Payload] Niches from form:', niches);

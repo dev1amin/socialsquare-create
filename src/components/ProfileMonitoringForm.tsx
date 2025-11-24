@@ -27,7 +27,7 @@ export default function ProfileMonitoringForm({ onContinue, onBack, formData }: 
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://webhook.workez.online/webhook/trendspy/lander/findTargetes', {
+      const response = await fetch('https://api.workez.online/webhook/findTargetes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
