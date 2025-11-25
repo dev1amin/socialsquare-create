@@ -60,7 +60,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
     const fetchNiches = async () => {
       setLoadingNiches(true);
       try {
-        const response = await fetch('https://webhook.workez.online/webhook/getNiches', {
+        const response = await fetch('https://api.workez.online/webhook/getNiches', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
