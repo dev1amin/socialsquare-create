@@ -42,7 +42,7 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
       setIsLoading(true);
       
       try {
-        const response = await fetch('https://webhook.workez.online/webhook/trends/lander/analyzeWebsite', {
+        const response = await fetch('https://api.workez.online/webhook/analyzeWebsite', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

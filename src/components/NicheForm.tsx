@@ -35,7 +35,7 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
     const fetchNiches = async () => {
       try {
         setIsLoadingNiches(true);
-        const response = await fetch('https://webhook.workez.online/webhook/getNiches', {
+        const response = await fetch('https://api.workez.online/webhook/getNiches', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
