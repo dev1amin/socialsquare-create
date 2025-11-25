@@ -117,15 +117,16 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
       const data = await response.json();
       console.log('getUserProfileInfluencers response:', data);
 
-      if (response.ok && data && data.success) {
+      if (response.ok && Array.isArray(data) && data.length > 0 && data[0].success === true) {
+        const profileData = data[0];
         setProfiles([...profiles, { 
-          text: data.username || trimmedProfile, 
+          text: profileData.username || trimmedProfile, 
           type: 'manualAdded',
           lang: 'pt',
           country: 'BR',
           niche_ids: [],
           niche_names: [],
-          profilePicture: data.profilePicture,
+          profilePicture: profileData.profilePicture,
           verified: true
         }]);
         setCurrentProfile('');
@@ -498,7 +499,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                             </>
                           ) : (
                             <>
-                              {profile.type !== 'suggestionAdded' && (
+                              {profile.type !== 'suggestionAdded' && profile.type !== 'aiRecommend' && (
                                 <button
                                   type="button"
                                   onClick={() => toggleExpanded(index)}
