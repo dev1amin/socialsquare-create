@@ -18,6 +18,7 @@ export interface CreateBusinessPayload {
   influencers: Influencer[] | null;
   niches?: string[] | null;
   custom_niches?: string[] | null;
+  post_count?: number;
 }
 
 export interface CreateBusinessResponse {
@@ -115,23 +116,29 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
   console.log('[Business Payload] Starting transformation');
   console.log('[Business Payload] Form data received:', JSON.stringify(formData, null, 2));
 
+  // Use the name from getUserProfile response instead of accountName
+  const profileName = formData.userProfileMetrics?.name?.trim();
   const accountName = formData.accountName?.trim();
+  const businessName = profileName || accountName;
+  
   const instagramHandle = formData.instagramHandle?.trim();
   const socialNetworkType = formData.socialNetworkType;
   const mainObjective = formData.mainObjective?.trim();
   const profilesToMonitor = formData.profilesToMonitor || [];
 
   console.log('[Business Payload] Extracted fields:', {
+    profileName,
     accountName,
+    businessName,
     instagramHandle,
     socialNetworkType,
     mainObjective,
     profilesToMonitorCount: profilesToMonitor.length
   });
 
-  if (!accountName || !instagramHandle || !socialNetworkType || !mainObjective) {
+  if (!businessName || !instagramHandle || !socialNetworkType || !mainObjective) {
     console.error('[Business Payload] Missing required fields:', {
-      hasAccountName: !!accountName,
+      hasBusinessName: !!businessName,
       hasInstagramHandle: !!instagramHandle,
       hasSocialNetworkType: !!socialNetworkType,
       hasMainObjective: !!mainObjective
@@ -193,8 +200,14 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
 
   console.log('[Business Payload] Building influencers list:', influencers);
 
+  // Get post count from getUserProfile response
+  const mediaValue = formData.userProfileMetrics?.media;
+  console.log('[Business Payload] Media value:', mediaValue, 'Type:', typeof mediaValue);
+  const postCount = mediaValue ? parseInt(mediaValue, 10) : undefined;
+  console.log('[Business Payload] Post count after parsing:', postCount);
+
   const payload: CreateBusinessPayload = {
-    name: accountName,
+    name: businessName,
     website: formData.websiteLink?.trim() || null,
     social_type: socialNetworkType === 'Marca Pessoal' ? 'Marca pessoal' : 'Empresa',
     instagram: normalizeHandle(instagramHandle),
@@ -202,7 +215,8 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
     objective: mainObjective,
     influencers: influencers,
     niches: predefinedNiches.length > 0 ? predefinedNiches : null,
-    custom_niches: customNiches.length > 0 ? customNiches : null
+    custom_niches: customNiches.length > 0 ? customNiches : null,
+    post_count: postCount
   };
 
   if (!payload.niches && !payload.custom_niches) {
