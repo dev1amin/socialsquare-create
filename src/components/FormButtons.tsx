@@ -24,44 +24,38 @@ export default function FormButtons({
   isSubmitting = false,
 }: FormButtonsProps) {
   return (
-    <div className="fixed bottom-[50px] left-0 right-0 px-6 max-w-sm mx-auto w-full">
-      <div className="space-y-3">
-        {/* Continue/Submit Button */}
+    <div className="onboard-buttons">
+      {/* Continue/Submit Button */}
+      <button
+        type="submit"
+        onClick={onContinue}
+        disabled={continueDisabled || isSubmitting}
+        className="onboard-btn-primary"
+      >
+        {isSubmitting ? 'Processando...' : continueText}
+      </button>
+
+      {/* Skip Button */}
+      {showSkip && onSkip && (
         <button
-          type="submit"
-          onClick={onContinue}
-          disabled={continueDisabled || isSubmitting}
-          className={`w-full py-4 px-6 rounded-xl font-medium text-white text-sm transition-all duration-200 ${
-            continueDisabled || isSubmitting
-              ? 'bg-gray-medium cursor-not-allowed'
-              : 'bg-primary hover:bg-[#5A54E3] active:scale-95'
-          }`}
+          type="button"
+          onClick={onSkip}
+          className="onboard-btn-outline"
         >
-          {isSubmitting ? 'Processando...' : continueText}
+          {skipText}
         </button>
+      )}
 
-        {/* Back Button (always full width below Continue) */}
-        {showBack && onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="w-full py-3 px-4 rounded-xl font-medium text-gray-dark bg-gray-light hover:bg-gray-200 text-sm transition-all duration-200"
-          >
-            Voltar
-          </button>
-        )}
-
-        {/* Skip Button (optional, full width) */}
-        {showSkip && onSkip && (
-          <button
-            type="button"
-            onClick={onSkip}
-            className="w-full py-3 px-4 rounded-xl font-medium text-gray-dark bg-gray-light hover:bg-gray-200 text-sm transition-all duration-200"
-          >
-            {skipText}
-          </button>
-        )}
-      </div>
+      {/* Back Button */}
+      {showBack && onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="onboard-btn-secondary"
+        >
+          Voltar
+        </button>
+      )}
     </div>
   );
 }

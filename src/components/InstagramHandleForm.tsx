@@ -39,14 +39,13 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
       if (!response.ok) {
         console.error('User profile request failed:', response.status, response.statusText);
         setErrorMessage('Não conseguimos puxar esse @. Confira se digitou certo e tente de novo. :)');
-        return; // NÃO chama onContinue
+        return;
       }
 
       const responseData = await response.json();
       console.log('User profile metrics:', responseData);
 
       if (responseData && responseData.success === true) {
-        // Sucesso → pode continuar
         onContinue?.({
           instagramHandle: instagramHandle.trim(),
           userProfileMetrics: {
@@ -55,9 +54,7 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
         });
       } else {
         console.error('Invalid profile data or profile not found:', responseData);
-        // Perfil não encontrado / inválido → mantém na tela e mostra erro
         setErrorMessage('Não encontramos esse perfil. Provavelmente o @ está errado. Tenta novamente.');
-        // se você QUISER continuar mesmo assim, aí sim chamaria onContinue aqui.
       }
     } catch (error) {
       console.error('User profile request error:', error);
@@ -76,28 +73,21 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
   };
 
   return (
-    <div className="min-h-screen bg-secondary flex flex-col">
-      {/* Header with Logo */}
-      <div className="pt-12 pb-16 px-6">
+    <div className="onboard-container">
+      <div className="onboard-header">
         <Logo />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col px-6 max-w-sm mx-auto w-full">
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          {/* Question */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-dark text-left">
+      <div className="onboard-content">
+        <form onSubmit={handleSubmit} className="onboard-form">
+          <div className="onboard-question">
+            <h1 className="onboard-title">
               Qual o @ do seu perfil no instagram?
-              <span className="text-danger text-sm ml-2">*</span>
             </h1>
-            <p className="text-sm text-gray-medium mt-2">
-              (Obrigatório)
-            </p>
+            <p className="onboard-subtitle">(Obrigatório)</p>
           </div>
 
-          {/* Input Field */}
-          <div className="flex-1">
+          <div className="onboard-input-section">
             {isLoading ? (
               <div className="w-full py-8 text-center">
                 <div className="inline-flex items-center space-x-3">
@@ -122,7 +112,7 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
                     type="text"
                     value={instagramHandle}
                     onChange={handleInstagramChange}
-                    className="w-full pl-16 pr-4 py-4 text-sm text-gray-dark bg-secondary border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-medium"
+                    className="w-full pl-16 pr-4 py-3 text-sm text-gray-dark bg-secondary border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-medium"
                     maxLength={30}
                     autoFocus
                     placeholder="seu_usuario_instagram"
@@ -138,7 +128,6 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
             )}
           </div>
 
-          {/* Bottom Section with Button */}
           {!isLoading && (
             <FormButtons
               onBack={onBack}

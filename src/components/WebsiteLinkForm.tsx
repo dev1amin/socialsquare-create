@@ -10,7 +10,6 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
   const handleWebsiteLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     
-    // If user types or pastes https://, remove the duplicate
     if (value.startsWith('https://https://')) {
       setWebsiteLink(value.replace('https://https://', 'https://'));
     } else if (value.startsWith('http://https://')) {
@@ -18,7 +17,6 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
     } else if (value.startsWith('https://http://')) {
       setWebsiteLink(value.replace('https://http://', 'https://'));
     } else {
-      // Ensure it always starts with https://
       if (!value.startsWith('https://')) {
         setWebsiteLink('https://' + value.replace(/^https?:\/\//, ''));
       } else {
@@ -29,9 +27,8 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
 
   const isValidWebsiteLink = () => {
     const trimmed = websiteLink.trim();
-    if (trimmed.length <= 10) return false; // Must be more than just "https://"
+    if (trimmed.length <= 10) return false;
     
-    // Basic URL validation - must start with https:// and have valid domain
     const urlPattern = /^https:\/\/[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*([\/\w\.\-\?\&\%\#\=]*)*\/?$/i;
     return urlPattern.test(trimmed);
   };
@@ -57,19 +54,15 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
           const responseData = await response.json();
           console.log('Website analysis response:', responseData);
           
-          // Handle the response which is an array with niches data
-          let extractedNiches = [];
+          let extractedNiches: { text: string; type: string }[] = [];
           if (Array.isArray(responseData.niches) && responseData.niches.length > 0 && responseData.success === true) {
-            // Convert AI niches to objects with type
             const aiNiches = responseData.niches || [];
-            extractedNiches = aiNiches.map(niche => ({
+            extractedNiches = aiNiches.map((niche: string) => ({
               text: niche,
               type: 'aiRecommend'
             }));
-            console.log(extractedNiches)
           }
           
-          // Continue with the response data
           if (onContinue) {
             onContinue({ 
               websiteLink: websiteLink.trim(),
@@ -79,14 +72,12 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
           }
         } else {
           console.error('Website analysis request failed:', response.status, response.statusText);
-          // Continue anyway with just the website link
           if (onContinue) {
             onContinue({ websiteLink: websiteLink.trim() });
           }
         }
       } catch (error) {
         console.error('Website analysis request error:', error);
-        // Continue anyway with just the website link
         if (onContinue) {
           onContinue({ websiteLink: websiteLink.trim() });
         }
@@ -97,33 +88,26 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
   };
 
   return (
-    <div className="min-h-screen bg-secondary flex flex-col">
-      {/* Header with Logo */}
-      <div className="pt-12 pb-16 px-6">
+    <div className="onboard-container">
+      <div className="onboard-header">
         <Logo />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col px-6 max-w-sm mx-auto w-full">
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          {/* Question */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-dark text-left">
+      <div className="onboard-content">
+        <form onSubmit={handleSubmit} className="onboard-form">
+          <div className="onboard-question">
+            <h1 className="onboard-title">
               Qual o link do site?
-              <span className="text-danger text-sm ml-2">*</span>
             </h1>
-            <p className="text-sm text-gray-medium mt-2">
-              (Obrigatório)
-            </p>
+            <p className="onboard-subtitle">(Obrigatório)</p>
           </div>
 
-          {/* Input Field */}
-          <div className="flex-1">
+          <div className="onboard-input-section">
             {isLoading ? (
               <div className="w-full py-8 text-center">
                 <div className="inline-flex items-center space-x-3">
                   <div className="animate-spin rounded-xl h-8 w-8 border-b-2 border-primary"></div>
-                  <span className="text-sm text-gray-medium ">
+                  <span className="text-sm text-gray-medium">
                     Analisando website...
                   </span>
                 </div>
@@ -133,14 +117,13 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
                 type="url"
                 value={websiteLink}
                 onChange={handleWebsiteLinkChange}
-                className="w-full px-4 py-4 text-sm text-gray-dark bg-white border border-[#E5E5E5] rounded-xl transition-all duration-200  focus:outline-none focus:border-primary hover:border-primary placeholder-gray-400"
+                className="w-full px-4 py-3 text-sm text-gray-dark bg-white border border-[#E5E5E5] rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-400"
                 autoFocus
                 placeholder="https://www.seusite.com.br"
               />
             )}
           </div>
 
-          {/* Bottom Section with Button */}
           {!isLoading && (
             <FormButtons
               onBack={onBack}
