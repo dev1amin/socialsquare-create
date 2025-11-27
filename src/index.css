@@ -5,6 +5,11 @@
 @tailwind utilities;
 
 @layer base {
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
   body {
     font-family: 'Inter', sans-serif;
   }
@@ -30,5 +35,59 @@
   * {
     scrollbar-width: thin;
     scrollbar-color: #d1d5db transparent;
+  }
+}
+
+/* Desktop-first layout utilities */
+@layer components {
+  .onboard-container {
+    @apply h-screen bg-secondary flex flex-col overflow-hidden;
+  }
+
+  .onboard-header {
+    @apply py-3 px-6 lg:py-4 flex-shrink-0;
+  }
+
+  .onboard-content {
+    align-items: baseline !important;
+    margin-top: 30px !important;
+    @apply flex-1 flex items-center justify-center px-6 w-full overflow-hidden;
+  }
+
+  .onboard-form {
+    @apply w-full max-w-md lg:max-w-lg flex flex-col items-center;
+  }
+
+  .onboard-question {
+    @apply mb-6 text-center flex-shrink-0 w-full;
+  }
+
+  .onboard-title {
+    @apply text-xl lg:text-2xl font-semibold text-gray-dark mb-2;
+  }
+
+  .onboard-subtitle {
+    @apply text-sm text-gray-medium;
+  }
+
+  .onboard-input-section {
+    @apply w-full mb-6 flex-shrink-0;
+  }
+
+  .onboard-buttons {
+    @apply w-full space-y-2 flex-shrink-0;
+  }
+
+  .onboard-btn-primary {
+    margin-top: 20px;
+    @apply w-full py-3 lg:py-4 px-6 rounded-xl font-medium text-white text-sm transition-all duration-200 bg-primary hover:bg-[#5A54E3] active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed;
+  }
+
+  .onboard-btn-secondary {
+    @apply w-full py-3 px-4 rounded-xl font-medium text-gray-dark bg-gray-light hover:bg-gray-200 text-sm transition-all duration-200;
+  }
+
+  .onboard-btn-outline {
+    @apply w-full py-3 px-4 rounded-xl font-medium text-primary bg-white border border-primary hover:bg-primary/5 text-sm transition-all duration-200;
   }
 }
