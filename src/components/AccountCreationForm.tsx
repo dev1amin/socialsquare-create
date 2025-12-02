@@ -35,8 +35,7 @@ export default function AccountCreationForm({}: AccountCreationFormProps) {
           'sec-ch-ua-platform': '"Linux"',
           'sec-fetch-dest': 'empty',
           'sec-fetch-mode': 'cors',
-          'sec-fetch-site': 'cross-site',
-          'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
+          'sec-fetch-site': 'cross-site'
         },
         body: JSON.stringify({
           email: email.trim(),
