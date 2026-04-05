@@ -49,7 +49,7 @@ function InfluencerCard({
     <div
       onClick={onToggle}
       className={`
-        relative cursor-pointer rounded-2xl p-4 transition-all duration-300 border-2
+        relative cursor-pointer rounded-xl md:rounded-2xl p-3 md:p-4 transition-all duration-300 border-2
         ${
           isSelected
             ? 'bg-blue-500/20 border-blue-500 backdrop-blur-md shadow-lg'
@@ -59,9 +59,9 @@ function InfluencerCard({
     >
       {/* Indicador de seleção */}
       {isSelected && (
-        <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+        <div className="absolute top-2 right-2 md:top-3 md:right-3 w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full flex items-center justify-center">
           <svg
-            className="w-4 h-4 text-white"
+            className="w-3 h-3 md:w-4 md:h-4 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -76,21 +76,21 @@ function InfluencerCard({
         </div>
       )}
 
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 md:gap-4">
         {/* Foto de perfil */}
         <div className="flex-shrink-0 relative">
           <img
             src={influencer.profilePicture}
             alt={influencer.name}
-            className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+            className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-md"
             onError={(e) => {
               (e.target as HTMLImageElement).src =
                 'https://via.placeholder.com/64?text=@';
             }}
           />
           {influencer.verified === 'true' && (
-            <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
-              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <div className="absolute bottom-0 right-0 w-4 h-4 md:w-5 md:h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
+              <svg className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
               </svg>
             </div>
@@ -99,35 +99,35 @@ function InfluencerCard({
 
         {/* Informações */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-gray-900 truncate">
+          <div className="flex items-center gap-1 md:gap-2">
+            <h3 className="font-semibold text-gray-900 truncate text-sm md:text-base">
               {influencer.name}
             </h3>
+            {influencer.niche && (
+              <span className="hidden md:inline-block px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
+                {influencer.niche}
+              </span>
+            )}
           </div>
 
-          <p className="text-sm text-gray-500 mb-1">@{influencer.username}</p>
+          <p className="text-xs md:text-sm text-gray-500">@{influencer.username}</p>
 
-          {influencer.niche && (
-            <span className="inline-block px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full mb-2">
-              {influencer.niche}
-            </span>
-          )}
-
+          {/* Bio - escondida no mobile */}
           <p
-            className="text-sm text-gray-600 line-clamp-2 mb-3"
+            className="hidden md:block text-sm text-gray-600 line-clamp-2 mt-1 mb-2"
             title={influencer.bio}
           >
             {influencer.bio}
           </p>
 
-          <div className="flex items-center gap-4 text-sm">
-            <div className="text-center">
+          <div className="flex items-center gap-3 md:gap-4 text-xs md:text-sm mt-1">
+            <div>
               <span className="font-semibold text-gray-900">
                 {formatFollowers(influencer.followers)}
               </span>
-              <span className="text-gray-500 ml-1">seguidores</span>
+              <span className="text-gray-500 ml-1">seg.</span>
             </div>
-            <div className="text-center">
+            <div>
               <span className="font-semibold text-gray-900">
                 {influencer.media}
               </span>
@@ -137,13 +137,13 @@ function InfluencerCard({
         </div>
       </div>
 
-      {/* Link para o Instagram */}
+      {/* Link para o Instagram - escondido no mobile */}
       <a
         href={influencer.instagramLink}
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="mt-3 flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
+        className="hidden md:flex mt-3 items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
@@ -364,24 +364,24 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
         <div className="w-full max-w-4xl px-4 py-4 flex flex-col">
           {/* TÍTULO + INPUT */}
           <div className="shrink-0">
-            <div className="text-center mb-4">
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                Escolha no mínimo 3 influencers para acompanhar
+            <div className="text-center mb-3 md:mb-4">
+              <h1 className="text-lg md:text-2xl font-bold text-gray-900 mb-1">
+                Escolha no mínimo 3 influencers
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm md:text-base text-gray-600">
                 Selecione clicando nos cards ou adicione manualmente
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
                 {selectedInfluencers.size} de 3 selecionados
               </p>
             </div>
 
-            <div className="mb-4">
-              <div className="flex flex-col md:flex-row gap-2 max-w-xl mx-auto">
+            <div className="mb-3 md:mb-4">
+              <div className="flex flex-row gap-2 max-w-xl mx-auto">
                 {/* Input handle */}
                 <div className="flex-1 relative">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <span className="text-gray-400">@</span>
+                  <div className="absolute inset-y-0 left-3 md:left-4 flex items-center pointer-events-none">
+                    <span className="text-gray-400 text-sm">@</span>
                   </div>
                   <input
                     type="text"
@@ -389,14 +389,14 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                     onChange={handleHandleChange}
                     onKeyPress={handleKeyPress}
                     disabled={loadingProfile}
-                    className="w-full pl-10 pr-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
-                    placeholder="adicionar_perfil"
+                    className="w-full pl-8 md:pl-10 pr-3 md:pr-4 py-2.5 md:py-3 text-base bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                    placeholder="perfil"
                     maxLength={30}
                   />
                 </div>
 
-                {/* Input niche com autocomplete */}
-                <div className="flex-1 relative">
+                {/* Input niche com autocomplete - escondido no mobile */}
+                <div className="hidden md:block flex-1 relative">
                   <input
                     ref={nicheInputRef}
                     type="text"
@@ -404,8 +404,8 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
                     onChange={handleNicheChange}
                     onFocus={() => setShowNicheDropdown(true)}
                     disabled={loadingProfile}
-                    className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
-                    placeholder="nicho do perfil (ex: marketing, fitness)"
+                    className="w-full px-4 py-3 text-base bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                    placeholder="nicho (ex: marketing, fitness)"
                     maxLength={60}
                   />
                   {/* Dropdown de nichos */}
@@ -473,11 +473,11 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
             </div>
           </div>
 
-          {/* CONTAINER FIXO COM SCROLL – height: 200px (1 card mobile, 2 no resto) */}
-          <div className="shrink-0 mb-4">
-            <div className="h-[200px] overflow-y-auto pr-1">
+          {/* CONTAINER FIXO COM SCROLL – altura adaptativa mobile/desktop */}
+          <div className="flex-1 min-h-0 mb-4">
+            <div className="h-full overflow-y-auto pr-1">
               {allInfluencers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {allInfluencers.map((influencer) => (
                     <InfluencerCard
                       key={influencer.username}
