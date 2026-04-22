@@ -45,11 +45,16 @@ export default function Phase1LoadingPage({ formData, onComplete }: Phase1Loadin
         }
 
         console.log('[Phase1Loading] Transforming form data to payload...');
-        const payload = transformFormDataToBusinessPayload(formData);
+        let payload;
+        try {
+          payload = transformFormDataToBusinessPayload(formData);
+        } catch (err) {
+          const m = err instanceof Error ? err.message : 'Dados insuficientes';
+          throw new Error(m);
+        }
 
         if (!payload) {
           console.error('[Phase1Loading] Payload is null - insufficient data');
-          console.error('[Phase1Loading] Form data that failed:', formData);
           throw new Error('Dados insuficientes para criar o business');
         }
 

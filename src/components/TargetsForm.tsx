@@ -117,6 +117,15 @@ function InfluencerCard({
                 {influencer.niche}
               </span>
             )}
+            <a
+              href={influencer.instagramLink || `https://www.instagram.com/${influencer.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="ml-auto px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              Ver perfil ↗
+            </a>
           </div>
         </div>
       </div>

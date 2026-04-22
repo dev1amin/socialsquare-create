@@ -114,6 +114,20 @@ export default function OnboardFunnel() {
       const result = await verifyActivationToken(token);
 
       if (!result.success) {
+        // Fallback: se o token "expirou" mas o usuario ja completou registro
+        // (JWT salvo em localStorage), seguimos com a sessao existente.
+        const stored = getStoredAuthTokens();
+        if (stored.accessToken) {
+          const jwtCheck = await verifyJWT(stored.accessToken);
+          if (jwtCheck.success) {
+            console.log('[OnboardFunnel] Token de ativacao expirado mas JWT em localStorage e valido, prosseguindo.');
+            setIsAuthenticated(true);
+            setHasJWT(true);
+            setIsValidatingToken(false);
+            return;
+          }
+        }
+
         if (result.code === 'ACTIVATION_TOKEN_EXPIRED' || result.code === 'INVALID_ACTIVATION_TOKEN') {
           setIsTokenExpired(true);
 

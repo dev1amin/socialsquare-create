@@ -136,14 +136,16 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
     profilesToMonitorCount: profilesToMonitor.length
   });
 
-  if (!businessName || !instagramHandle || !socialNetworkType || !mainObjective) {
-    console.error('[Business Payload] Missing required fields:', {
-      hasBusinessName: !!businessName,
-      hasInstagramHandle: !!instagramHandle,
-      hasSocialNetworkType: !!socialNetworkType,
-      hasMainObjective: !!mainObjective
-    });
-    return null;
+  const missing: string[] = [];
+  if (!businessName) missing.push('nome do negócio');
+  if (!instagramHandle) missing.push('@ do Instagram');
+  if (!socialNetworkType) missing.push('tipo (Marca pessoal/Empresa)');
+  if (!mainObjective) missing.push('objetivo principal');
+
+  if (missing.length > 0) {
+    const msg = `Faltando: ${missing.join(', ')}`;
+    console.error('[Business Payload] Missing required fields:', missing);
+    throw new Error(msg);
   }
 
   const defaultLocale = detectLanguageAndCountry();
@@ -183,15 +185,24 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
   const predefinedNiches: string[] = [];
   const customNiches: string[] = [];
 
+  // UUID v4 regex — ids predefinidos sao UUIDs reais; ids "custom-xxx" sao gerados client-side e devem ir como custom
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   niches.forEach((niche: any) => {
     if (typeof niche === 'string') {
       customNiches.push(niche);
-    } else if (niche.id) {
+    } else if (niche.id && UUID_RE.test(niche.id)) {
       predefinedNiches.push(niche.id);
-    } else {
+    } else if (niche.text) {
       customNiches.push(niche.text);
     }
   });
+
+  // Tambem aceita formData.custom_niches: string[] (caso a UI envie separado)
+  if (Array.isArray(formData.custom_niches)) {
+    for (const c of formData.custom_niches) {
+      if (typeof c === 'string' && c.trim()) customNiches.push(c.trim());
+    }
+  }
 
   console.log('[Business Payload] Separated niches:', {
     predefinedNiches,
@@ -221,7 +232,7 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
 
   if (!payload.niches && !payload.custom_niches) {
     console.error('[Business Payload] Need at least one niche or custom niche');
-    return null;
+    throw new Error('Selecione pelo menos um nicho');
   }
 
   console.log('[Business Payload] Final payload:', JSON.stringify(payload, null, 2));
