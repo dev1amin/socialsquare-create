@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
 import { FormStepProps, Niche } from '../types/form';
+import { ONBOARDING_ENDPOINTS } from '../config/api';
 
 interface NicheOption {
   id: string;
@@ -27,15 +28,12 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
   const [customNiche, setCustomNiche] = useState('');
   const [niches, setNiches] = useState<Niche[]>([]);
 
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editingValue, setEditingValue] = useState('');
-
   // Fetch niches from webhook on component mount
   useEffect(() => {
     const fetchNiches = async () => {
       try {
         setIsLoadingNiches(true);
-        const response = await fetch('https://api.workez.online/webhook/getNiches', {
+        const response = await fetch(ONBOARDING_ENDPOINTS.niches, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -164,56 +162,6 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
 
   const handleRemoveNiche = (index: number) => {
     setNiches(prev => prev.filter((_, i) => i !== index));
-    if (editingIndex === index) {
-      setEditingIndex(null);
-      setEditingValue('');
-    }
-  };
-
-  const handleEditNiche = (index: number) => {
-    if (niches[index].type === 'aiRecommend') return;
-    setEditingIndex(index);
-    setEditingValue(niches[index].text);
-  };
-
-  const handleSaveEdit = (index: number) => {
-    const trimmedValue = editingValue.trim();
-    if (
-      trimmedValue &&
-      !niches.some((niche, i) => i !== index && niche.text.toLowerCase() === trimmedValue.toLowerCase())
-    ) {
-      const updatedNiches = [...niches];
-
-      const matched = availableNiches.find(
-        predefined => predefined.name.toLowerCase() === trimmedValue.toLowerCase()
-      );
-
-      if (matched) {
-        updatedNiches[index] = {
-          text: matched.name,
-          type: updatedNiches[index].type,
-          id: matched.id
-        };
-      } else {
-        const slug = trimmedValue.toLowerCase().replace(/\s+/g, '-');
-        const customId = `custom-${slug}`;
-
-        updatedNiches[index] = {
-          ...updatedNiches[index],
-          text: trimmedValue,
-          id: customId
-        };
-      }
-
-      setNiches(updatedNiches);
-    }
-    setEditingIndex(null);
-    setEditingValue('');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingIndex(null);
-    setEditingValue('');
   };
 
   const handleCustomNicheKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -223,23 +171,6 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
     } else if (e.key === 'Escape') {
       e.preventDefault();
       setCustomNiche('');
-    }
-  };
-
-  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSaveEdit(index);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      handleCancelEdit();
-    }
-  };
-
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.length <= 50) {
-      setEditingValue(value);
     }
   };
 
@@ -279,7 +210,7 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
             <p className="onboard-subtitle">Selecione até 6 nichos</p>
           </div>
 
-          <div className="onboard-input-section max-h-[50vh] overflow-y-auto">
+          <div className="onboard-input-section max-h-[55vh] overflow-y-auto">
             {/* Input para adicionar nicho personalizado */}
             <div className="mb-4">
               <label className="block text-sm text-gray-dark mb-2">
@@ -314,56 +245,13 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
                   +
                 </button>
               </div>
+              <p className="text-xs text-gray-400 mt-1">
+                {niches.length}/6 selecionados
+              </p>
             </div>
 
-            {/* Niche Selection Pills */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200 overflow-y-auto flex-1">
-              {/* Nichos selecionados */}
-              <div className="mb-4">
-                <p className="text-xs font-medium text-gray-500 mb-2">
-                  Nichos selecionados
-                </p>
-                {niches.length === 0 ? (
-                  <p className="text-xs text-gray-400">
-                    Nenhum nicho selecionado ainda.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {niches.map((niche, index) => (
-                      <div key={niche.id || `${niche.text}-${index}`} className="flex items-center gap-1">
-                        {editingIndex === index ? (
-                          <input
-                            type="text"
-                            value={editingValue}
-                            onChange={handleEditChange}
-                            onKeyDown={(e) => handleEditKeyDown(e, index)}
-                            onBlur={() => handleSaveEdit(index)}
-                            autoFocus
-                            className="px-3 py-1 text-xs border border-gray-300 rounded-full focus:outline-none focus:border-primary"
-                          />
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleEditNiche(index)}
-                            className="rounded-full border-2 px-3 py-1 text-xs font-normal bg-primary border-primary text-white"
-                          >
-                            {niche.text}
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveNiche(index)}
-                          className="text-xs text-gray-500 hover:text-gray-800"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Sugestões de nichos */}
+            {/* Lista única de nichos (sugestões + customs adicionados) */}
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
               {isLoadingNiches ? (
                 <div className="w-full py-4 text-center">
                   <div className="inline-flex items-center space-x-3">
@@ -374,12 +262,20 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
                   </div>
                 </div>
               ) : (
-                <>
-                  <p className="text-xs font-medium text-gray-500 mb-2">
-                    Sugestões de nichos
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {availableNiches.map((niche) => {
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const combined: { id: string; name: string; isCustom?: boolean }[] = [
+                      ...availableNiches.map(n => ({ id: n.id, name: n.name })),
+                    ];
+                    niches.forEach(n => {
+                      const id = n.id || `custom-${n.text.toLowerCase().replace(/\s+/g, '-')}`;
+                      const exists = combined.some(
+                        c => c.id === id || c.name.toLowerCase() === n.text.toLowerCase()
+                      );
+                      if (!exists) combined.push({ id, name: n.text, isCustom: true });
+                    });
+
+                    return combined.map((niche) => {
                       const isSelected = niches.some(
                         n => n.id === niche.id || n.text.toLowerCase() === niche.name.toLowerCase()
                       );
@@ -394,41 +290,40 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
                       const defaultClasses =
                         'bg-white border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5';
 
+                      const handleClick = () => {
+                        if (isDisabled) return;
+                        if (niche.isCustom) {
+                          if (isSelected) {
+                            const idx = niches.findIndex(
+                              n => n.id === niche.id || n.text.toLowerCase() === niche.name.toLowerCase()
+                            );
+                            if (idx !== -1) handleRemoveNiche(idx);
+                          }
+                        } else {
+                          handleSelectNiche(niche.id);
+                        }
+                      };
+
                       return (
-                        <div key={niche.id} className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSelectNiche(niche.id)}
-                            disabled={isDisabled}
-                            className={`${baseClasses} ${
-                              isSelected
-                                ? selectedClasses
-                                : isDisabled
-                                ? disabledClasses
-                                : defaultClasses
-                            }`}
-                          >
-                            {niche.name}
-                          </button>
-                          {isSelected && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const index = niches.findIndex(
-                                  n => n.id === niche.id || n.text.toLowerCase() === niche.name.toLowerCase()
-                                );
-                                if (index !== -1) handleRemoveNiche(index);
-                              }}
-                              className="text-xs text-gray-500 hover:text-gray-800"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
+                        <button
+                          key={niche.id}
+                          type="button"
+                          onClick={handleClick}
+                          disabled={isDisabled}
+                          className={`${baseClasses} ${
+                            isSelected
+                              ? selectedClasses
+                              : isDisabled
+                              ? disabledClasses
+                              : defaultClasses
+                          }`}
+                        >
+                          {niche.name}
+                        </button>
                       );
-                    })}
-                  </div>
-                </>
+                    });
+                  })()}
+                </div>
               )}
             </div>
           </div>

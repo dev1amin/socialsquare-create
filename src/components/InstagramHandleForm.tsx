@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import { FormStepProps } from '../types/form';
 import FormButtons from './FormButtons';
+import { ONBOARDING_ENDPOINTS } from '../config/api';
 
 export default function InstagramHandleForm({ onContinue, onBack, formData }: FormStepProps) {
   const [instagramHandle, setInstagramHandle] = useState(formData?.instagramHandle || '');
@@ -25,7 +26,7 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://api.workez.online/webhook/getUserProfile', {
+      const response = await fetch(ONBOARDING_ENDPOINTS.instagramProfile, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

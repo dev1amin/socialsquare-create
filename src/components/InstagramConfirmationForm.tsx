@@ -4,7 +4,7 @@ import { FormStepProps } from '../types/form';
 
 export default function InstagramConfirmationForm({ onContinue, onBack, formData }: FormStepProps) {
   const [isConfirming, setIsConfirming] = useState(false);
-  
+
   const profileData = formData?.userProfileMetrics;
 
   const handleChange = () => {
@@ -12,14 +12,14 @@ export default function InstagramConfirmationForm({ onContinue, onBack, formData
       onContinue({ goBackToInstagramHandle: true });
     }
   };
-  
+
   if (!profileData || profileData.success !== true) {
     return (
       <div className="onboard-container">
         <div className="onboard-header">
           <Logo />
         </div>
-        
+
         <div className="onboard-content justify-center items-center">
           <div className="text-center space-y-6">
             <div className="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mx-auto">
@@ -47,9 +47,9 @@ export default function InstagramConfirmationForm({ onContinue, onBack, formData
     setIsConfirming(true);
     setTimeout(() => {
       if (onContinue) {
-        onContinue({ 
+        onContinue({
           profileConfirmed: true,
-          goBackToInstagramHandle: false
+          goBackToInstagramHandle: false,
         });
       }
     }, 300);
@@ -57,13 +57,13 @@ export default function InstagramConfirmationForm({ onContinue, onBack, formData
 
   const formatNumber = (num: string) => {
     const number = parseInt(num);
-    if (number >= 1000000) {
-      return (number / 1000000).toFixed(1) + 'M';
-    } else if (number >= 1000) {
-      return (number / 1000).toFixed(1) + 'K';
-    }
+    if (Number.isNaN(number)) return '0';
+    if (number >= 1_000_000) return (number / 1_000_000).toFixed(1).replace('.0', '') + 'M';
+    if (number >= 1_000) return (number / 1_000).toFixed(1).replace('.0', '') + 'K';
     return number.toString();
   };
+
+  const placeholderAvatar = `https://ui-avatars.com/api/?background=eef2ff&color=4f46e5&name=${encodeURIComponent(profileData.name || profileData.username || '?')}`;
 
   return (
     <div className="onboard-container">
@@ -75,65 +75,87 @@ export default function InstagramConfirmationForm({ onContinue, onBack, formData
         <div className="onboard-form">
           <div className="onboard-question">
             <h1 className="onboard-title">Este é o seu perfil?</h1>
+            <p className="onboard-subtitle">Confira se reconhece os dados antes de continuar.</p>
           </div>
 
           <div className="onboard-input-section">
-            {/* Profile Card */}
-            <div className="bg-gray-50 rounded-xl p-4 lg:p-6 border border-gray-200">
-              <div className="flex items-center space-x-4 mb-4">
-                <img
-                  src={profileData.profilePicture}
-                  alt="Profile"
-                  className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://via.placeholder.com/64x64/e5e7eb/6b7280?text=?';
-                  }}
-                />
-                <div className="flex-1">
-                  <div className="flex gap-2 items-center font-semibold text-sm text-gray-dark">
-                    {profileData.name}
-                    {profileData.verified === "true" && (
-                      <svg aria-label="Verificado" className="flex-shrink-0" fill="rgb(0, 149, 246)" height="16" role="img" viewBox="0 0 40 40" width="16"><title>Verificado</title><path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z" fillRule="evenodd"></path></svg>
-                    )}
+            <div className="relative w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="h-14 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100" />
+
+              <div className="px-5 pb-5">
+                <div className="-mt-10 mb-3 flex items-end gap-3">
+                  <div className="relative">
+                    <img
+                      src={profileData.profilePicture || placeholderAvatar}
+                      alt={profileData.username || 'Perfil'}
+                      className="w-20 h-20 rounded-full object-cover ring-4 ring-white shadow-md bg-gray-100"
+                      onError={(e) => {
+                        e.currentTarget.src = placeholderAvatar;
+                      }}
+                    />
                   </div>
-                  <div className="text-primary font-medium text-sm">
-                    @{profileData.username}
+
+                  <div className="flex-1 min-w-0 pb-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <h2 className="font-semibold text-gray-900 truncate text-base leading-tight">
+                        {profileData.name || profileData.username}
+                      </h2>
+                      {String(profileData.verified) === 'true' && (
+                        <svg
+                          aria-label="Verificado"
+                          className="flex-shrink-0"
+                          fill="rgb(0, 149, 246)"
+                          height="14"
+                          role="img"
+                          viewBox="0 0 40 40"
+                          width="14"
+                        >
+                          <title>Verificado</title>
+                          <path
+                            d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z"
+                            fillRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <a
+                      href={`https://www.instagram.com/${profileData.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary font-medium hover:underline truncate block"
+                    >
+                      @{profileData.username}
+                    </a>
+                  </div>
+                </div>
+
+                {profileData.bio && (
+                  <p className="text-sm text-gray-700 leading-snug whitespace-pre-line line-clamp-3 mb-4">
+                    {profileData.bio}
+                  </p>
+                )}
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2 text-center">
+                    <div className="text-base font-semibold text-gray-900 leading-tight">
+                      {formatNumber(profileData.media || '0')}
+                    </div>
+                    <div className="text-[11px] uppercase tracking-wide text-gray-500">Posts</div>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2 text-center">
+                    <div className="text-base font-semibold text-gray-900 leading-tight">
+                      {formatNumber(profileData.followers || '0')}
+                    </div>
+                    <div className="text-[11px] uppercase tracking-wide text-gray-500">Seguidores</div>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2 text-center">
+                    <div className="text-base font-semibold text-gray-900 leading-tight">
+                      {formatNumber(profileData.following || '0')}
+                    </div>
+                    <div className="text-[11px] uppercase tracking-wide text-gray-500">Seguindo</div>
                   </div>
                 </div>
               </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="font-bold text-sm text-gray-dark">
-                    {formatNumber(profileData.media)}
-                  </div>
-                  <div className="text-xs text-gray-medium">Posts</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-sm text-gray-dark">
-                    {formatNumber(profileData.followers)}
-                  </div>
-                  <div className="text-xs text-gray-medium">Seguidores</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-sm text-gray-dark">
-                    {formatNumber(profileData.following)}
-                  </div>
-                  <div className="text-xs text-gray-medium">Seguindo</div>
-                </div>
-              </div>
-
-              {/* Bio */}
-              {profileData.bio && (
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="text-xs text-gray-dark leading-relaxed line-clamp-3">
-                    {profileData.bio.split('\n').map((line: string, index: number) => (
-                      <div key={index}>{line}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -146,7 +168,7 @@ export default function InstagramConfirmationForm({ onContinue, onBack, formData
             >
               {isConfirming ? 'Confirmando...' : 'Sim, esse é meu perfil'}
             </button>
-            
+
             <button
               type="button"
               onClick={handleChange}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import { FormStepProps } from '../types/form';
 import FormButtons from './FormButtons';
+import { ONBOARDING_ENDPOINTS } from '../config/api';
 
 export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormStepProps) {
   const [websiteLink, setWebsiteLink] = useState(formData?.websiteLink || 'https://');
@@ -39,7 +40,7 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
       setIsLoading(true);
       
       try {
-        const response = await fetch('https://api.workez.online/webhook/analyzeWebsite', {
+        const response = await fetch(ONBOARDING_ENDPOINTS.analyzeWebsite, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

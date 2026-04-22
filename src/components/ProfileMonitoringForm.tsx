@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Logo from './Logo';
 import { FormStepProps } from '../types/form';
+import { ONBOARDING_ENDPOINTS } from '../config/api';
 
 // Mesmo shape que o retorno do findTargetes
 interface InfluencerData {
@@ -40,7 +41,7 @@ export default function ProfileMonitoringForm({ onContinue, onBack, formData }: 
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://api.workez.online/webhook/findTargetes', {
+      const response = await fetch(ONBOARDING_ENDPOINTS.findTargets, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
