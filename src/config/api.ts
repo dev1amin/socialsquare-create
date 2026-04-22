@@ -8,7 +8,7 @@
 const isDevelopment = import.meta.env.DEV;
 export const API_BASE_URL = isDevelopment
   ? '/api'
-  : (import.meta.env.VITE_API_BASE_URL || 'https://carousel-api-sepia.vercel.app');
+  : (import.meta.env.VITE_API_BASE_URL || 'https://socialsquare-backend.vercel.app');
 
 export const ONBOARDING_ENDPOINTS = {
   instagramProfile: `${API_BASE_URL}/api/onboarding/instagram-profile`,

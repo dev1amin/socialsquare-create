@@ -22,7 +22,8 @@ export default function AccountCreationForm({}: AccountCreationFormProps) {
     setError(null);
 
     try {
-      const response = await fetch('https://carousel-api-sepia.vercel.app/api/auth/create-account-from-purchase', {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://carousel-api-sepia.vercel.app';
+      const response = await fetch(`${apiBase}/api/auth/create-account-from-purchase`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://carousel-api-sepia.vercel.app';
+import { API_BASE_URL } from '../config/api';
 
 export interface Influencer {
   handle: string;
