@@ -1,12 +1,14 @@
 /**
  * Configuração centralizada das URLs da API.
  *
- * Todos os endpoints de onboarding (perfil do Instagram, lista de nichos,
- * análise de website e busca de influencers) agora apontam para o backend
- * próprio em vez do antigo fluxo n8n (api.workez.online).
+ * Em desenvolvimento usa o proxy Vite (/api) para evitar CORS.
+ * Em produção usa VITE_API_BASE_URL ou o fallback do backend.
  */
 
-export const API_BASE_URL = 'https://carousel-api-sepia.vercel.app';
+const isDevelopment = import.meta.env.DEV;
+export const API_BASE_URL = isDevelopment
+  ? '/api'
+  : (import.meta.env.VITE_API_BASE_URL || 'https://carousel-api-sepia.vercel.app');
 
 export const ONBOARDING_ENDPOINTS = {
   instagramProfile: `${API_BASE_URL}/api/onboarding/instagram-profile`,
