@@ -6,6 +6,17 @@ export interface Influencer {
   country: string;
   niche_ids?: string[];
   niche_names?: string[];
+  display_name?: string;
+  snapshot?: {
+    display_name?: string | null;
+    bio?: string | null;
+    profile_pic_s3?: string | null;
+    followers_count?: number | null;
+    following_count?: number | null;
+    media_count?: number | null;
+    is_verified?: boolean;
+    fetched_at?: string;
+  };
 }
 
 export interface CreateBusinessPayload {
@@ -173,6 +184,11 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
     // Add custom niches to niche_names
     if (typeof profile === 'object' && profile.niche_names && profile.niche_names.length > 0) {
       influencer.niche_names = profile.niche_names;
+    }
+
+    // Incluir snapshot de perfil para persistência no banco
+    if (typeof profile === 'object' && profile.snapshot) {
+      influencer.snapshot = profile.snapshot;
     }
     
     return influencer;

@@ -57,11 +57,12 @@ export default function WebsiteLinkForm({ onContinue, onBack, formData }: FormSt
           
           let extractedNiches: { text: string; type: string }[] = [];
           if (Array.isArray(responseData.niches) && responseData.niches.length > 0 && responseData.success === true) {
-            const aiNiches = responseData.niches || [];
-            extractedNiches = aiNiches.map((niche: string) => ({
-              text: niche,
-              type: 'aiRecommend'
-            }));
+            extractedNiches = responseData.niches
+              .slice(0, 3)
+              .map((niche: { name: string; is_custom: boolean } | string) => ({
+                text: typeof niche === 'string' ? niche : niche.name,
+                type: 'aiRecommend',
+              }));
           }
           
           if (onContinue) {
