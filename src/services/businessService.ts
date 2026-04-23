@@ -30,6 +30,7 @@ export interface CreateBusinessPayload {
   niches?: string[] | null;
   custom_niches?: string[] | null;
   post_count?: number;
+  logo_url?: string | null;
 }
 
 export interface CreateBusinessResponse {
@@ -243,7 +244,8 @@ export function transformFormDataToBusinessPayload(formData: any): CreateBusines
     influencers: influencers,
     niches: predefinedNiches.length > 0 ? predefinedNiches : null,
     custom_niches: customNiches.length > 0 ? customNiches : null,
-    post_count: postCount
+    post_count: postCount,
+    logo_url: formData.userProfileMetrics?.profilePicture || null,
   };
 
   if (!payload.niches && !payload.custom_niches) {
