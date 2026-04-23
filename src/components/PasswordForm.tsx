@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Logo from './Logo';
 import { FormStepProps } from '../types/form';
-import { completeRegistration } from '../services/authService';
 import FormButtons from './FormButtons';
 
 export default function PasswordForm({ onContinue, onBack, formData }: FormStepProps) {
@@ -14,56 +13,19 @@ export default function PasswordForm({ onContinue, onBack, formData }: FormStepP
     e.preventDefault();
     if (!password.trim() || !isValidPassword() || !onContinue) return;
 
-    const activationToken = formData?.activationToken;
-    const accountName = formData?.accountName;
-
-    if (!activationToken || !accountName) {
-      setError('Dados de ativação não encontrados.');
-      return;
-    }
-
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const result = await completeRegistration(
-        activationToken,
-        accountName,
-        password.trim()
-      );
-
-      if (!result.success) {
-        if (result.code === 'INVALID_ACTIVATION_TOKEN' || result.code === 'ACTIVATION_TOKEN_EXPIRED') {
-          setError('Token de ativação inválido ou expirado. Por favor, recarregue a página.');
-        } else if (result.errors && result.errors.length > 0) {
-          setError(result.errors.join(', '));
-        } else {
-          setError(result.message || 'Erro ao completar o registro.');
-        }
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (result.access_token && result.refresh_token) {
-        localStorage.setItem('access_token', result.access_token);
-        localStorage.setItem('refresh_token', result.refresh_token);
-
-        if (result.expires_at) {
-          localStorage.setItem('token_expires_at', result.expires_at.toString());
-        }
-
-        if (result.user) {
-          localStorage.setItem('user_data', JSON.stringify(result.user));
-        }
-      }
-
+      // Não chama a API aqui — apenas avança o funil com name + password locais.
+      // A criação real do usuário Auth acontece só em Phase1LoadingPage via
+      // POST /api/auth/finalize-onboarding.
       onContinue({
         password: password.trim(),
-        registrationComplete: true,
-        needsBusinessSetup: result.user?.needs_business_setup || false
       });
     } catch (err) {
       setError('Erro inesperado ao processar o registro.');
+    } finally {
       setIsSubmitting(false);
     }
   };

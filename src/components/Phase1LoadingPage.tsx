@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
 import { FormData } from '../types/form';
-import { createBusiness, transformFormDataToBusinessPayload } from '../services/businessService';
-import { getStoredAuthTokens } from '../services/authService';
+import { transformFormDataToBusinessPayload } from '../services/businessService';
+import { finalizeOnboarding } from '../services/authService';
 
 interface Phase1LoadingPageProps {
   formData: FormData;
@@ -22,9 +22,8 @@ export default function Phase1LoadingPage({ formData, onComplete }: Phase1Loadin
   ];
 
   useEffect(() => {
-    const runBusinessCreation = async () => {
+    const runOnboardingFinalization = async () => {
       const stepDuration = 1000;
-      const intervals: NodeJS.Timeout[] = [];
 
       setCurrentStep(0);
       await new Promise(resolve => setTimeout(resolve, stepDuration));
@@ -33,40 +32,44 @@ export default function Phase1LoadingPage({ formData, onComplete }: Phase1Loadin
       setIsCreatingBusiness(true);
 
       try {
-        console.log('[Phase1Loading] Starting business creation process');
-        console.log('[Phase1Loading] Form data:', formData);
+        console.log('[Phase1Loading] Starting onboarding finalization');
 
-        const { accessToken } = getStoredAuthTokens();
-        console.log('[Phase1Loading] Access token retrieved:', !!accessToken);
+        const draftToken = formData?.activationToken;
+        const name = formData?.accountName;
+        const password = formData?.password;
 
-        if (!accessToken) {
-          console.error('[Phase1Loading] No access token found');
-          throw new Error('Nenhum token de autenticação encontrado');
+        if (!draftToken || !name || !password) {
+          throw new Error('Dados de onboarding incompletos. Recarregue a página e tente novamente.');
         }
 
-        console.log('[Phase1Loading] Transforming form data to payload...');
-        let payload;
+        // Transformar formData em payload de business (pode ser null se dados insuficientes)
+        let businessPayload = null;
         try {
-          payload = transformFormDataToBusinessPayload(formData);
+          businessPayload = transformFormDataToBusinessPayload(formData);
         } catch (err) {
-          const m = err instanceof Error ? err.message : 'Dados insuficientes';
-          throw new Error(m);
+          console.warn('[Phase1Loading] Business payload transform failed (non-fatal):', err);
         }
 
-        if (!payload) {
-          console.error('[Phase1Loading] Payload is null - insufficient data');
-          throw new Error('Dados insuficientes para criar o business');
-        }
-
-        console.log('[Phase1Loading] Payload created successfully, calling API...');
-        const result = await createBusiness(accessToken, payload);
+        console.log('[Phase1Loading] Calling finalize-onboarding...');
+        const result = await finalizeOnboarding(draftToken, name, password, businessPayload);
 
         if (!result.success) {
-          if (result.details && result.details.length > 0) {
-            const errorMessages = result.details.map(d => d.message).join(', ');
-            throw new Error(errorMessages);
+          const msg = result.details?.map((d: any) => d.message).join(', ')
+            || result.message
+            || 'Falha ao finalizar onboarding';
+          throw new Error(msg);
+        }
+
+        // Armazenar tokens recebidos
+        if (result.access_token && result.refresh_token) {
+          localStorage.setItem('access_token', result.access_token);
+          localStorage.setItem('refresh_token', result.refresh_token);
+          if (result.expires_at) {
+            localStorage.setItem('token_expires_at', result.expires_at.toString());
           }
-          throw new Error(result.message || 'Falha ao criar business');
+          if (result.user) {
+            localStorage.setItem('user_data', JSON.stringify(result.user));
+          }
         }
 
         setIsCreatingBusiness(false);
@@ -89,15 +92,11 @@ export default function Phase1LoadingPage({ formData, onComplete }: Phase1Loadin
         setIsCreatingBusiness(false);
         const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
         setError(errorMessage);
-        console.error('Business creation failed:', err);
+        console.error('Onboarding finalization failed:', err);
       }
-
-      return () => {
-        intervals.forEach(clearTimeout);
-      };
     };
 
-    runBusinessCreation();
+    runOnboardingFinalization();
   }, [formData, onComplete]);
 
   return (

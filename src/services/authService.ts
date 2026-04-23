@@ -258,3 +258,66 @@ export function storeAuthData(
     console.error('Failed to store auth data:', error);
   }
 }
+
+// ===== FINALIZE ONBOARDING =====
+
+export interface FinalizeOnboardingResponse {
+  success: boolean;
+  message: string;
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    email_confirmed: boolean;
+    selected_business_id: string | null;
+    needs_business_setup: boolean;
+  };
+  business?: unknown;
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
+  code?: string;
+  details?: Array<{ field: string; message: string }>;
+}
+
+/**
+ * Finaliza o onboarding: cria usuário Auth + business em um único passo.
+ * Substitui a combinação de completeRegistration + createBusiness.
+ */
+export async function finalizeOnboarding(
+  draftToken: string,
+  name: string,
+  password: string,
+  businessPayload: unknown | null,
+): Promise<FinalizeOnboardingResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/finalize-onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        draft_token: draftToken,
+        name,
+        password,
+        business: businessPayload,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.message || 'Falha ao finalizar onboarding',
+        code: data.code,
+        details: data.details,
+      };
+    }
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Erro de rede. Verifique sua conexão.',
+    };
+  }
+}
