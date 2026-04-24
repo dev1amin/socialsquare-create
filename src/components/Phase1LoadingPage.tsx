@@ -60,6 +60,11 @@ export default function Phase1LoadingPage({ formData, onComplete }: Phase1Loadin
           throw new Error(msg);
         }
 
+        // Verificar se o business foi criado quando um payload foi enviado
+        if (businessPayload && !result.user?.selected_business_id) {
+          throw new Error('Falha ao criar seu perfil de negócio. Por favor, tente novamente.');
+        }
+
         // Armazenar tokens recebidos
         if (result.access_token && result.refresh_token) {
           localStorage.setItem('access_token', result.access_token);
