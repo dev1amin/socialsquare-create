@@ -28,6 +28,18 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
   const [customNiche, setCustomNiche] = useState('');
   const [niches, setNiches] = useState<Niche[]>([]);
 
+  // Permite scroll da página nesta etapa (o CSS global bloqueia overflow)
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    html.style.overflow = 'auto';
+    body.style.overflow = 'auto';
+    return () => {
+      html.style.overflow = '';
+      body.style.overflow = '';
+    };
+  }, []);
+
   // Fetch niches from webhook on component mount
   useEffect(() => {
     const fetchNiches = async () => {
@@ -191,13 +203,13 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
   const isValidToSubmit = niches.length > 0;
 
   return (
-    <div className="h-screen bg-secondary flex flex-col overflow-hidden">
-      <div className="py-3 px-6 lg:py-4 flex-shrink-0">
+    <div className="min-h-screen bg-secondary flex flex-col">
+      <div className="py-3 px-6 lg:py-4">
         <Logo />
       </div>
 
-      <div className="flex-1 flex flex-col px-6 overflow-hidden min-h-0">
-        <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-md lg:max-w-lg mx-auto h-full min-h-0 pt-[30px]">
+      <div className="flex-1 flex flex-col px-6">
+        <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-md lg:max-w-lg mx-auto pt-[30px] pb-6">
           <div className="onboard-question">
             <h1 className="onboard-title">
               Qual ou quais são os seus nicho(s)?
@@ -210,7 +222,7 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
             <p className="onboard-subtitle">Selecione até 6 nichos</p>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto w-full mb-4">
+          <div className="w-full mb-4">
             {/* Input para adicionar nicho personalizado */}
             <div className="mb-4">
               <label className="block text-sm text-gray-dark mb-2">
