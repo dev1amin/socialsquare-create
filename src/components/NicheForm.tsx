@@ -263,7 +263,7 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
             </div>
 
             {/* Lista única de nichos (sugestões + customs adicionados) */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <div className="bg-white rounded-xl p-4 border border-gray-200 h-[200px] overflow-y-auto">
               {isLoadingNiches ? (
                 <div className="w-full py-4 text-center">
                   <div className="inline-flex items-center space-x-3">
