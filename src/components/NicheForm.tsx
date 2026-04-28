@@ -191,13 +191,13 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
   const isValidToSubmit = niches.length > 0;
 
   return (
-    <div className="onboard-container">
-      <div className="onboard-header">
+    <div className="h-screen bg-secondary flex flex-col overflow-hidden">
+      <div className="py-3 px-6 lg:py-4 flex-shrink-0">
         <Logo />
       </div>
 
-      <div className="onboard-content">
-        <form onSubmit={handleSubmit} className="onboard-form">
+      <div className="flex-1 flex flex-col px-6 overflow-hidden min-h-0">
+        <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-md lg:max-w-lg mx-auto h-full min-h-0 pt-[30px]">
           <div className="onboard-question">
             <h1 className="onboard-title">
               Qual ou quais são os seus nicho(s)?
@@ -210,7 +210,7 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
             <p className="onboard-subtitle">Selecione até 6 nichos</p>
           </div>
 
-          <div className="onboard-input-section max-h-[55vh] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto w-full mb-4">
             {/* Input para adicionar nicho personalizado */}
             <div className="mb-4">
               <label className="block text-sm text-gray-dark mb-2">
@@ -328,11 +328,11 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
             </div>
           </div>
 
-          <div className="onboard-buttons">
+          <div className="w-full space-y-2 flex-shrink-0 pb-4">
             <button
               type="submit"
               disabled={!isValidToSubmit}
-              className="onboard-btn-primary"
+              className="onboard-btn-primary !mt-0"
             >
               Continuar
             </button>
