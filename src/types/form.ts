@@ -85,6 +85,7 @@ export interface FormData {
   activationToken?: string;
   jwtToken?: string;
   skipPassword?: boolean;
+  skipInstagramProfileLookup?: boolean;
   registrationComplete?: boolean;
   needsBusinessSetup?: boolean;
   goBackToInstagramHandle?: boolean;

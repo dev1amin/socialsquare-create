@@ -47,6 +47,9 @@ export const onboardConfig: FormStep[] = [
     component: InstagramHandleForm,
     title: 'Instagram Handle Question',
     nextStepLogic: (formData: FormData) => {
+      if (formData.skipInstagramProfileLookup) {
+        return 'has_website';
+      }
       return 'instagram_confirmation';
     },
     prevStepId: 'social_network_type'

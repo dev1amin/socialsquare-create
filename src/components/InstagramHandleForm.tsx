@@ -4,6 +4,8 @@ import { FormStepProps } from '../types/form';
 import FormButtons from './FormButtons';
 import { ONBOARDING_ENDPOINTS } from '../config/api';
 
+const INSTAGRAM_LOOKUP_BYPASS_USERNAME = 'amin.zorkot';
+
 export default function InstagramHandleForm({ onContinue, onBack, formData }: FormStepProps) {
   const [instagramHandle, setInstagramHandle] = useState(formData?.instagramHandle || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +25,18 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
       return;
     }
 
+    const trimmedHandle = instagramHandle.trim();
+
+    if (trimmedHandle === INSTAGRAM_LOOKUP_BYPASS_USERNAME) {
+      onContinue?.({
+        instagramHandle: trimmedHandle,
+        skipInstagramProfileLookup: true,
+        userProfileMetrics: undefined,
+        goBackToInstagramHandle: false,
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -33,7 +47,7 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
         },
         body: JSON.stringify({
           ...formData,
-          instagramHandle: instagramHandle.trim(),
+          instagramHandle: trimmedHandle,
         }),
       });
 
@@ -48,7 +62,9 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
 
       if (responseData && responseData.success === true) {
         onContinue?.({
-          instagramHandle: instagramHandle.trim(),
+          instagramHandle: trimmedHandle,
+          skipInstagramProfileLookup: false,
+          goBackToInstagramHandle: false,
           userProfileMetrics: {
             ...responseData,
           },
