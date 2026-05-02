@@ -392,7 +392,32 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
                       if (!exists) combined.push({ id, name: n.text, isCustom: true });
                     });
 
-                    return combined.map((niche) => {
+                    const selectedEntries = niches.map((selectedNiche) => ({
+                      id: selectedNiche.id || `custom-${selectedNiche.text.toLowerCase().replace(/\s+/g, '-')}`,
+                      name: selectedNiche.text,
+                    }));
+
+                    const orderedCombined = [
+                      ...selectedEntries
+                        .map((selectedEntry) =>
+                          combined.find(
+                            (item) =>
+                              item.id === selectedEntry.id ||
+                              item.name.toLowerCase() === selectedEntry.name.toLowerCase()
+                          )
+                        )
+                        .filter((item): item is { id: string; name: string; isCustom?: boolean } => Boolean(item)),
+                      ...combined.filter(
+                        (item) =>
+                          !selectedEntries.some(
+                            (selectedEntry) =>
+                              selectedEntry.id === item.id ||
+                              selectedEntry.name.toLowerCase() === item.name.toLowerCase()
+                          )
+                      ),
+                    ];
+
+                    return orderedCombined.map((niche) => {
                       const isSelected = niches.some(
                         n => n.id === niche.id || n.text.toLowerCase() === niche.name.toLowerCase()
                       );
