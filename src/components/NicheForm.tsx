@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Logo from './Logo';
 import { FormStepProps, Niche } from '../types/form';
 import { ONBOARDING_ENDPOINTS } from '../config/api';
@@ -7,6 +7,13 @@ interface NicheOption {
   id: string;
   name: string;
 }
+
+const normalizeNicheText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 
 const removeDuplicateNiches = (niches: NicheOption[]): NicheOption[] => {
   const seen = new Map<string, NicheOption>();
@@ -27,6 +34,29 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
 
   const [customNiche, setCustomNiche] = useState('');
   const [niches, setNiches] = useState<Niche[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const customNicheInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const normalizedCustomNiche = normalizeNicheText(customNiche);
+  const filteredNiches = normalizedCustomNiche
+    ? availableNiches
+        .filter((niche) => normalizeNicheText(niche.name).includes(normalizedCustomNiche))
+        .sort((first, second) => {
+          const firstStartsWith = normalizeNicheText(first.name).startsWith(normalizedCustomNiche);
+          const secondStartsWith = normalizeNicheText(second.name).startsWith(normalizedCustomNiche);
+
+          if (firstStartsWith === secondStartsWith) {
+            return first.name.localeCompare(second.name, 'pt-BR');
+          }
+
+          return firstStartsWith ? -1 : 1;
+        })
+        .slice(0, 8)
+    : [];
+  const hasDuplicateNiche = niches.some(
+    (n) => normalizeNicheText(n.text) === normalizedCustomNiche
+  );
 
   // Permite scroll da página nesta etapa (o CSS global bloqueia overflow)
   useEffect(() => {
@@ -118,6 +148,25 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
     }
   }, [availableNiches, formData?.niches]); // não depende de `niches` aqui
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        customNicheInputRef.current &&
+        !customNicheInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleSelectNiche = (nicheId: string) => {
     const selectedNicheOption = availableNiches.find(n => n.id === nicheId);
     if (!selectedNicheOption) return;
@@ -138,16 +187,34 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
     }
   };
 
+  const handleSelectSuggestedNiche = (niche: NicheOption) => {
+    const isAlreadySelected = niches.some((selectedNiche) => selectedNiche.id === niche.id);
+
+    if (!isAlreadySelected && niches.length < 6) {
+      setNiches((prev) => [
+        ...prev,
+        {
+          text: niche.name,
+          type: 'manualAdded',
+          id: niche.id,
+        },
+      ]);
+    }
+
+    setCustomNiche('');
+    setShowSuggestions(false);
+  };
+
   const handleAddCustomNiche = () => {
     const trimmedNiche = customNiche.trim();
     if (
       !trimmedNiche ||
-      niches.some(n => n.text.toLowerCase() === trimmedNiche.toLowerCase()) ||
+      niches.some(n => normalizeNicheText(n.text) === normalizeNicheText(trimmedNiche)) ||
       niches.length >= 6
     ) return;
 
     const matched = availableNiches.find(
-      predefined => predefined.name.toLowerCase() === trimmedNiche.toLowerCase()
+      predefined => normalizeNicheText(predefined.name) === normalizeNicheText(trimmedNiche)
     );
 
     if (matched) {
@@ -179,10 +246,17 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
   const handleCustomNicheKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+
+      if (filteredNiches.length > 0) {
+        handleSelectSuggestedNiche(filteredNiches[0]);
+        return;
+      }
+
       handleAddCustomNiche();
     } else if (e.key === 'Escape') {
       e.preventDefault();
       setCustomNiche('');
+      setShowSuggestions(false);
     }
   };
 
@@ -229,26 +303,57 @@ export default function NicheForm({ onContinue, onBack, formData }: FormStepProp
                 Adicione um nicho personalizado
               </label>
               <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={customNiche}
-                  onChange={(e) => setCustomNiche(e.target.value)}
-                  onKeyDown={handleCustomNicheKeyDown}
-                  className="flex-1 px-4 py-2 text-sm text-gray-dark bg-white border border-gray-300 rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-400"
-                  placeholder="Digite seu nicho"
-                  maxLength={50}
-                />
+                <div className="relative flex-1">
+                  <input
+                    ref={customNicheInputRef}
+                    type="text"
+                    value={customNiche}
+                    onChange={(e) => {
+                      setCustomNiche(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onKeyDown={handleCustomNicheKeyDown}
+                    className="w-full px-4 py-2 text-sm text-gray-dark bg-white border border-gray-300 rounded-xl transition-all duration-200 focus:outline-none focus:border-primary hover:border-primary placeholder-gray-400"
+                    placeholder="Digite seu nicho"
+                    maxLength={50}
+                  />
+
+                  {showSuggestions && customNiche.trim() && (
+                    <div
+                      ref={suggestionsRef}
+                      className="absolute z-20 top-full left-0 right-0 mt-2 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg"
+                    >
+                      {filteredNiches.length > 0 ? (
+                        filteredNiches.map((niche) => (
+                          <button
+                            key={niche.id}
+                            type="button"
+                            onClick={() => handleSelectSuggestedNiche(niche)}
+                            className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-primary/5"
+                          >
+                            {niche.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                          Nenhum nicho encontrado. Clique em + para adicionar como personalizado.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={handleAddCustomNiche}
                   disabled={
                     !customNiche.trim() ||
-                    niches.some(n => n.text.toLowerCase() === customNiche.trim().toLowerCase()) ||
+                    hasDuplicateNiche ||
                     niches.length >= 6
                   }
                   className={`px-5 py-2 rounded-xl font-medium transition-all duration-200 ${
                     customNiche.trim() &&
-                    !niches.some(n => n.text.toLowerCase() === customNiche.trim().toLowerCase()) &&
+                    !hasDuplicateNiche &&
                     niches.length < 6
                       ? 'bg-primary text-white hover:bg-[#5a54e3]'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
