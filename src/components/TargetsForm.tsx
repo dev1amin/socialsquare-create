@@ -202,7 +202,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   );
 
   const handleAddManualProfile = async () => {
-    const trimmedHandle = currentHandle.trim().replace(/^@/, '');
+    const trimmedHandle = currentHandle.trim().replace(/^@/, '').toLowerCase();
     const trimmedNiche = currentNiche.trim();
     if (!trimmedHandle) return;
 
@@ -311,7 +311,7 @@ export default function TargetsForm({ onContinue, onBack, formData }: FormStepPr
   const handleHandleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/^@/, '');
     if (/^[a-zA-Z0-9._]*$/.test(value) && value.length <= 30) {
-      setCurrentHandle(value);
+      setCurrentHandle(value.toLowerCase());
       setProfileError(null);
     }
   };
