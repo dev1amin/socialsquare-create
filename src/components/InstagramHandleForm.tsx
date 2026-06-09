@@ -30,8 +30,18 @@ export default function InstagramHandleForm({ onContinue, onBack, formData }: Fo
     if (INSTAGRAM_LOOKUP_BYPASS_USERNAMES.includes(trimmedHandle)) {
       onContinue?.({
         instagramHandle: trimmedHandle,
-        skipInstagramProfileLookup: true,
-        userProfileMetrics: undefined,
+        skipInstagramProfileLookup: false,
+        userProfileMetrics: {
+          profilePicture: `https://ui-avatars.com/api/?name=${trimmedHandle}&background=random`,
+          name: trimmedHandle === 'professor.clebinho' ? 'Professor Clebinho' : 'Amin Zorkot',
+          username: trimmedHandle,
+          followers: trimmedHandle === 'professor.clebinho' ? '15500' : '5000',
+          following: '120',
+          media: '45',
+          bio: 'Conta de teste bypass.',
+          verified: false,
+          success: true
+        },
         goBackToInstagramHandle: false,
       });
       return;
